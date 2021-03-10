@@ -70,7 +70,10 @@ class Matrix {
         if (n instanceof Matrix) {
             for (let i = 0; i < this.rows; i++) {
                 for (let j = 0; j < this.cols; j++) {
+                    console.log(this.data[i][j])
                     this.data[i][j] += n.data[i][j];
+                    console.log(this.data[i][j])
+                    console.log("AAAAAAAAAAAAAAAAAAAAAAAAA")
                 }
             }
 
@@ -103,6 +106,16 @@ class Matrix {
                 this.data[i][j] = fn(this.data[i][j]);
             }
         }
+    }
+
+    static map(m, fn) {
+        let result = new Matrix(m.rows, m.cols);
+        for (let i = 0; i < this.rows; i++) {
+            for (let j = 0; j < this.cols; j++) {
+                result.data[i][j] = fn(this.data[i][j]);
+            }
+        }
+        return result
     }
 
 
