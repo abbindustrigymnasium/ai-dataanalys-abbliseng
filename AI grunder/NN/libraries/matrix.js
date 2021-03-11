@@ -70,10 +70,7 @@ class Matrix {
         if (n instanceof Matrix) {
             for (let i = 0; i < this.rows; i++) {
                 for (let j = 0; j < this.cols; j++) {
-                    console.log(this.data[i][j])
                     this.data[i][j] += n.data[i][j];
-                    console.log(this.data[i][j])
-                    console.log("AAAAAAAAAAAAAAAAAAAAAAAAA")
                 }
             }
 
@@ -87,10 +84,20 @@ class Matrix {
         }
     }
 
-    multiply(n) {
-        for (let i = 0; i < this.rows; i++) {
-            for (let j = 0; j < this.cols; j++) {
-                this.data[i][j] *= n;
+    multiply(other) {
+        // Are we trying to multiply a Matrix?
+        if (other instanceof Matrix) {
+            for (var i = 0; i < this.rows; i++) {
+                for (var j = 0; j < this.cols; j++) {
+                    this.data[i][j] *= other.data[i][j];
+                }
+            }
+            // Or just a single scalar value?
+        } else {
+            for (var i = 0; i < this.rows; i++) {
+                for (var j = 0; j < this.cols; j++) {
+                    this.data[i][j] *= other;
+                }
             }
         }
 
@@ -98,6 +105,16 @@ class Matrix {
 
     print() {
         console.table(this.data);
+    }
+
+    static map(m, fn) {
+        var result = new Matrix(m.rows, m.cols);
+        for (var i = 0; i < result.rows; i++) {
+            for (var j = 0; j < result.cols; j++) {
+                result.data[i][j] = fn(m.data[i][j]);
+            }
+        }
+        return result;
     }
 
     map(fn) {
@@ -108,21 +125,12 @@ class Matrix {
         }
     }
 
-    static map(m, fn) {
-        let result = new Matrix(m.rows, m.cols);
-        for (let i = 0; i < this.rows; i++) {
-            for (let j = 0; j < this.cols; j++) {
-                result.data[i][j] = fn(this.data[i][j]);
-            }
-        }
-        return result
-    }
 
 
     toArray() {
         let arr = [];
-        for (let i = 0; i < this.rows; i++){
-            for (let j = 0; j < this.cols; j++){
+        for (let i = 0; i < this.rows; i++) {
+            for (let j = 0; j < this.cols; j++) {
                 arr.push(this.data[i][j]);
             }
         }

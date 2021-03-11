@@ -4,7 +4,7 @@ function sigmoid(x) {
 
 function dsigmoid(y) {
     // return sigmoid(x) * (1 - sigmoid(x));
-    return y * (1 - y);
+    return (y * (1 - y));
 }
 
 class NeuralNetwork {
@@ -58,28 +58,31 @@ class NeuralNetwork {
     train(input_array, target_array) {
         // let outputs = this.feedforward(inputs);
         let inputs = Matrix.fromArray(input_array);
+        let targets = Matrix.fromArray(target_array);
         
         let hidden = Matrix.multiply(this.weights_ih, inputs);
         hidden.add(this.bias_h);
-        hidden.map(sigmoid); // Activation function
+        Matrix.map(hidden, sigmoid);
+        // hidden.map(sigmoid); // Activation function
 
         let outputs = Matrix.multiply(this.weights_ho, hidden);
         outputs.add(this.bias_o);
-        outputs.map(sigmoid); // Activation function
+        Matrix.map(outputs, sigmoid)
+        // outputs.map(sigmoid); // Activation function
         //
+        let output_errors = Matrix.subtract(targets, outputs);
+
 
         // outputs = Matrix.fromArray(outputs);
-        let targets = Matrix.fromArray(target_array);
-
-        let output_errors = Matrix.subtract(targets, outputs);
-        // let gradient = outputs * (1 - outputs)
         // Calculate gradients
         let gradients = Matrix.map(outputs, dsigmoid);
+        // console.log(gradients)
         gradients.multiply(output_errors);
+        // gradients.print()
         gradients.multiply(this.learning_rate);
 
         this.bias_o.add(gradients);
-        this.bias_o.print()
+        // this.bias_o.print()
 
         // Calculate deltas
         let hidden_T = Matrix.transpose(hidden);
