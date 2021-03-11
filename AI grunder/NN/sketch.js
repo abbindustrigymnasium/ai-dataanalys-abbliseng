@@ -11,10 +11,10 @@ let testingdata = [
 ]
 function setup() {
   //Skapar nätverket
-  nn = new NeuralNetwork(2, 2, 1);
+  nn = new NeuralNetwork(2, 2, 1); // Vill kunna skicka in en array för hidden layers
   
   //Skapar tränar det 100000 gånger
-  for (let i = 0; i < 100000; i++) {
+  for (let i = 0; i < 1000000; i++) {
     data = random(trainingdata)
     nn.train(data.inputs, data.targets);
   }

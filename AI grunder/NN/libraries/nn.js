@@ -1,28 +1,28 @@
 function sigmoid(x) {
     return 1 / (1 + Math.exp(-x));
   }
-  function deriviatesigmoid(y) {
+  function dsigmoid(y) {
       // return sigmoid(x) *(1 -sigmoid(x));
       return y * (1-y);
     }
   
   class NeuralNetwork {
-    constructor(Numberinput, Numberhidden, Numberoutput) {
-      this.Inputnodes = Numberinput;
-      this.Hiddennodes = Numberhidden;
-      this.OutputNodes = Numberoutput;
+    constructor(nInput, nHidden, nOutput) {
+      this.input = nInput;
+      this.hidden = nHidden;
+      this.output = nOutput;
       //Skapar vikter för de oliak lagrerna och ger dem random värden.
-      this.weights_ih = new Matrix(this.Hiddennodes, this.Inputnodes);
-      this.weights_ho = new Matrix(this.OutputNodes, this.Hiddennodes);
+      this.weights_ih = new Matrix(this.hidden, this.input);
+      this.weights_ho = new Matrix(this.output, this.hidden);
       this.weights_ih.randomize();
       this.weights_ho.randomize();
   
       //Skapar bias för de oliak lagrerna och ger dem random värden.
-      this.bias_h = new Matrix(this.Hiddennodes, 1);
-      this.bias_o = new Matrix(this.OutputNodes, 1);
+      this.bias_h = new Matrix(this.hidden, 1);
+      this.bias_o = new Matrix(this.output, 1);
       this.bias_h.randomize();
       this.bias_o.randomize();
-      this.learningrate=0.001;
+      this.lr=0.001;
     }
   
     //Det som skickas frammåt
@@ -63,9 +63,9 @@ function sigmoid(x) {
       let output_errors = Matrix.subtract(targets, outputs);
       // let  gradient = outputs * (1-outputs);
       //Räknar ut gradient
-      let gradients = Matrix.map(outputs,deriviatesigmoid);
+      let gradients = Matrix.map(outputs,dsigmoid);
       gradients.multiply(output_errors);
-      gradients.multiply(this.learningrate);
+      gradients.multiply(this.lr);
       
       //Räknar ut deltas
       let hidden_T = Matrix.transpose(hidden);
@@ -80,9 +80,9 @@ function sigmoid(x) {
   //Räknar ut erroret på hidden layer
       let weights_ho_transpose = Matrix.transpose(this.weights_ho);
       let hidden_errors = Matrix.multiply(weights_ho_transpose, output_errors);
-      let hidden_gradient =Matrix.map(hidden,deriviatesigmoid);
+      let hidden_gradient =Matrix.map(hidden,dsigmoid);
       hidden_gradient.multiply(hidden_errors);
-      hidden_gradient.multiply(this.learningrate);
+      hidden_gradient.multiply(this.lr);
   
       //Räknar ut hidden deltas
       let inputs_T = Matrix.transpose(inputs);
