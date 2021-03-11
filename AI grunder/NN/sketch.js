@@ -4,7 +4,7 @@ let trainingdata = [
   { inputs: [0, 1], targets: [1] },
   { inputs: [0, 0], targets: [0] },
   { inputs: [1, 0], targets: [1] },
-  { inputs: [1, 1], targets: [1] }
+  { inputs: [1, 1], targets: [0] }
 ];
 let testingdata = [
     [0,0],[0,1],[1,0],[1,1]
@@ -14,7 +14,10 @@ function setup() {
   nn = new NeuralNetwork(2, 2, 1); // Vill kunna skicka in en array för hidden layers
   
   //Skapar tränar det 100000 gånger
-  for (let i = 0; i < 100000000; i++) {
+  for (let i = 0; i < 20000000; i++) {
+      if (i % 10000 == 0) {
+          console.log(i/20000000)
+      }
     data = random(trainingdata)
     nn.train(data.inputs, data.targets);
   }
