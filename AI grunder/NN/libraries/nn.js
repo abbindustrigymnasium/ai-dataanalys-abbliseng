@@ -89,6 +89,7 @@ class NeuralNetwork {
         let weight_ho_deltas = Matrix.multiply(gradients, hidden_T);
 
         this.weights_ho.add(weight_ho_deltas);
+        this.weights_ho.print()
 
         // Hidden layer errors
         let who_t = Matrix.transpose(this.weights_ho);

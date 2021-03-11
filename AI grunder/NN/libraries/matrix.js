@@ -117,13 +117,13 @@ class Matrix {
         return result;
     }
 
-    map(fn) {
-        for (let i = 0; i < this.rows; i++) {
-            for (let j = 0; j < this.cols; j++) {
-                this.data[i][j] = fn(this.data[i][j]);
-            }
-        }
-    }
+    // map(fn) {
+    //     for (let i = 0; i < this.rows; i++) {
+    //         for (let j = 0; j < this.cols; j++) {
+    //             this.data[i][j] = fn(this.data[i][j]);
+    //         }
+    //     }
+    // }
 
 
 

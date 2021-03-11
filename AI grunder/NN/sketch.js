@@ -26,10 +26,10 @@ function setup() {
         let data = random(training_data);
         nn.train(data.inputs, data.target);
     }
-    nn.check()
+    // nn.check()
 
-    console.log(nn.feedforward([0,0]))
-    console.log(nn.feedforward([1,0]))
-    console.log(nn.feedforward([1,1]))
-    console.log(nn.feedforward([0,1]))
+    // console.log(nn.feedforward([0,0]))
+    // console.log(nn.feedforward([1,0]))
+    // console.log(nn.feedforward([1,1]))
+    // console.log(nn.feedforward([0,1]))
 }
