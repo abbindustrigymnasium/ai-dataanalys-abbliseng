@@ -1,3 +1,5 @@
+import random
+
 class Ant():
     def __init__(self):
-        print("no")
+        self.speed = random.randint(0,1)

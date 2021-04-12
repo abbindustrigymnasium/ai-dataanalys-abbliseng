@@ -17,13 +17,13 @@ gameboard = []
 for i in range(height):
     gameboard.append([])
     for j in range(width):
-        gameboard[i].append(0)
+        # [Walkable, Food, Home, Ant, Pheromones (negative red, positive blue)]
+        gameboard[i].append([True, False, False, False, 0])
 
 # Run until the user asks to quit
 # running = True
 
-# Done! Time to quit.
-pygame.quit()
+
 
 def markSquare(location, number):
     gameboard[location[1]][location[0]]
@@ -46,19 +46,26 @@ class AntWindow():
 class AntHill():
     def __init__(self, location):
         self.location = location
-        self.draw(location)
+        everyPointInCircle(self, location, 13, self.drawOne)
+        everyPointInCircle(self, location, 9, self.drawTwo)
+        everyPointInCircle(self, location, 5, self.drawThree)
+        # self.draw(location)
 
-    def draw(self, location):
+    def drawOne(self, location):
+        gameboard[math.floor(location[1])][math.floor(location[0])][2] = True # Home
         pygame.draw.circle(game.screen, (191, 123, 67), (math.floor(location[0]), math.floor(location[1])), 13)
+    def drawTwo(self, location):
         pygame.draw.circle(game.screen, (245, 169, 76), (math.floor(location[0]), math.floor(location[1])), 9)
+    def drawThree(self, location):
         pygame.draw.circle(game.screen, (255, 193, 112), (math.floor(location[0]), math.floor(location[1])), 5)
+
 
 class Food():
     def __init__(self,location):
         everyPointInCircle(self, location, 12, self.draw)
     def draw(self, location):
-        print(location)
-        gameboard[math.floor(location[1])][math.floor(location[0])] = 2 # 2 == Food
+        gameboard[math.floor(location[1])][math.floor(location[0])][1] = True # Food
+        print(gameboard[math.floor(location[1])][math.floor(location[0])])
         pygame.draw.circle(game.screen, (254, 196, 0), (location[0], location[1]), 1)
         
 game = AntWindow(1280, 960)
@@ -74,7 +81,9 @@ while game._running:
         game.handle_event(event)
 
     # Ant homebase
-    hill = AntHill([game._width/2, game._height/2])
 
-    # Flip the display, excuse me? wut
+    # "Flip the display" - excuse me? wut
     pygame.display.flip()
+
+# Done! Time to quit.
+pygame.quit()
