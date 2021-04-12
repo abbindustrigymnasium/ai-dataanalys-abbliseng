@@ -4,6 +4,7 @@
 import pygame
 import math
 from ant import Ant
+from utils import everyPointInCircle
 
 pygame.init()
 
@@ -16,15 +17,7 @@ gameboard = []
 for i in range(height):
     gameboard.append([])
     for j in range(width):
-        gameboard[i].append([0])
-
-
-for i in range(height):
-    for j in range(width):
-        print(gameboard[i][j])
-        
-
-# screen = pygame.display.set_mode([500, 500])
+        gameboard[i].append(0)
 
 # Run until the user asks to quit
 # running = True
@@ -32,13 +25,16 @@ for i in range(height):
 # Done! Time to quit.
 pygame.quit()
 
+def markSquare(location, number):
+    gameboard[location[1]][location[0]]
+
 class AntWindow():
     def __init__(self, width, height):
         self._width = width
         self._height = height
         self._running = True
         self.screen = pygame.display.set_mode([width, height])
-        # Fill the background with white
+        # Fill the background
         self.screen.fill((78, 42, 42))
     def handle_event(self, event):
         if event.type == pygame.QUIT:
@@ -59,14 +55,12 @@ class AntHill():
 
 class Food():
     def __init__(self,location):
-        self.createDaCircle(9, location)
-    def createDaCircle(self, side, location):
-        for i in range(side):
-            for j in range(side):
-                pygame.draw.circle(game.screen, (254, 196, 0), (location[0]+j, location[1]+i), 1)
-
-
-
+        everyPointInCircle(self, location, 12, self.draw)
+    def draw(self, location):
+        print(location)
+        gameboard[math.floor(location[1])][math.floor(location[0])] = 2 # 2 == Food
+        pygame.draw.circle(game.screen, (254, 196, 0), (location[0], location[1]), 1)
+        
 game = AntWindow(1280, 960)
 
 nAnts = 1
