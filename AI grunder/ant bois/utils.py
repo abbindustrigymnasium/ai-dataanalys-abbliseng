@@ -1,3 +1,6 @@
+# from main import _sSize
+_sSize = [1280, 960]
+
 def everyPointInCircle(p, location, radius, func):
     # Calculate bounding rectangle
     upperX = location[0]-radius
@@ -14,3 +17,6 @@ def everyPointInCircle(p, location, radius, func):
             if (distanceSquared <= radius*radius):
                 func([x,y])
     return None
+
+def convertToPixelCoords(location, sSize = _sSize):
+    return [(sSize[0]/2)-location[0],(sSize[1]/2)-location[1]]

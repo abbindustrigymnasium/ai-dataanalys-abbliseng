@@ -10,13 +10,14 @@ pygame.init()
 
 # Set up the drawing window
 
-width = 1280
-height = 960
+_sSize = [1280, 960] 
+# width = 1280
+# height = 960
 gameboard = []
 
-for i in range(height):
+for i in range(_sSize[1]):
     gameboard.append([])
-    for j in range(width):
+    for j in range(_sSize[0]):
         # [Walkable, Food, Home, Ant, Pheromones (negative red, positive blue)]
         gameboard[i].append([True, False, False, False, 0])
 
@@ -68,10 +69,10 @@ class Food():
         print(gameboard[math.floor(location[1])][math.floor(location[0])])
         pygame.draw.circle(game.screen, (254, 196, 0), (location[0], location[1]), 1)
         
-game = AntWindow(1280, 960)
+game = AntWindow(_sSize[0], _sSize[1])
 
 nAnts = 1
-ants = Ant()
+ants = Ant(0)
 hill = AntHill([game._width/2, game._height/2])
 
 while game._running:
