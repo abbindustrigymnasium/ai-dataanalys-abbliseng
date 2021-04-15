@@ -1,6 +1,8 @@
 import pygame
+from pygame.locals import *
 import math
 from  random import choice, randrange, randint, random
+import threading
 
 ## USEFUL FUNCTIONS (gonna be its own file eventually)
 def forEveryPointInCircle(location, radius, func):
@@ -20,7 +22,7 @@ def forEveryPointInCircle(location, radius, func):
                 func([x,y])
     return None
 
-def pointsInCircle(location, radius, index=False):
+def pointsInCircle(location, radius):
     points = []
     # Calculate bounding rectangle
     upperX = location[0]-radius
@@ -35,9 +37,6 @@ def pointsInCircle(location, radius, index=False):
             dy = y - location[1]
             distanceSquared = dx*dx+dy*dy
             if (distanceSquared <= radius*radius):
-                # if index:
-                #     points.append(getArrayLocation([x,y], width))
-                # else:
                 points.append([x,y])
     return points
 
@@ -50,13 +49,39 @@ def fromArrayLocation(location, width):
 def debugDraw(pos):
     pygame.draw.circle(game.screen, (0, 255, 0), (pos[0], pos[1]), 1)
 
+def hsl2rgb(h, s, l):
+    s /= 100
+    l /= 100
+    c = (1 - abs(2*l-1))*s
+    x = c*(1-abs((h/60)%2-1))
+    m = l-c/2
+    r = 0
+    g = 0
+    b = 0
+    if (0 <= h and h < 60):
+        r, g, b = c, x, 0
+    elif (60 <= h and h < 120):
+        r, g, b = x, c, 0
+    elif (120 <= h and h < 180):
+        r, g, b = 0, c, x
+    elif (180 <= h and h < 240):
+        r, g, b = 0, x, c
+    elif (240 <= h and h < 300):
+        r, g, b = x, 0, c
+    elif (300 <= h and h < 360):
+        r, g, b = c, 0, x
+    r = round((r+m)*255)
+    g = round((g+m)*255)
+    b = round((b+m)*255)
+    return((r,g,b))
+
 ## CLASSES
 
 class Nest():
     def __init__(self):
         self.xpos = math.floor(width/2)
         self.ypos = math.floor(height/2)
-        self.object = pygame.Rect((relX-5, relY-5), (10, 10))    
+        self.object = pygame.Rect((relX-5, relY-5), (5, 5))
 
 class Ant():
     def __init__(self, nest):
@@ -64,12 +89,12 @@ class Ant():
         self.ypos = nest.ypos
         self.speed = randint(1,10)
         self.freedom = random()
-        self.object = pygame.Rect(self.xpos, self.ypos, 2, 2)
+        self.object = pygame.Rect(self.xpos, self.ypos, 1, 1)
         # Other things like freedom, speed and stuff
     
     def getMovement(self):
         pheromoneArray = {}
-        optionsA = pointsInCircle([self.xpos, self.ypos], 15, True)
+        optionsA = pointsInCircle([self.xpos, self.ypos], 15)
         options = []
         # forEveryPointInCircle([self.xpos, self.ypos], 40, debugDraw)
         for option in optionsA:
@@ -80,22 +105,21 @@ class Ant():
         if (randint(0,10)<=self.freedom*10):
             return choice(options)
         for option in options:
-            pheromoneValue = gameArray[option]["pheromone"]["blue"]
-            pheromoneValue += gameArray[option]["pheromone"]["red"]
+            if (gameArray[option]["pheromone"]["red"] > 0):
+                pheromoneValue = gameArray[option]["pheromone"]["red"]
+            else:
+                pheromoneValue = gameArray[option]["pheromone"]["blue"]
             pheromoneArray[option] = pheromoneValue
         bestOption = max(pheromoneArray, key = lambda k: pheromoneArray[k])
-        # print(bestOption, ":", pheromoneArray)
         if pheromoneArray[bestOption] == 0:
             bestOption = choice(options)
-        game.pheromones.append(Pheromone(self))
+        # game.pheromones.append(Pheromone(self))
         return bestOption
-        # return 0
     
     def Move(self):
         a = self.getMovement()
         target = fromArrayLocation(a, width)
         # debugDraw(target)
-        # pygame.draw.circle(game.screen, (0, 255, 0), (target[0], target[1]), 1)
 
         if (self.xpos < target[0]):
             self.xpos += 1
@@ -116,11 +140,21 @@ class Pheromone():
         self.ypos = ant.ypos
         self.strength = strength
         self.age = 0
+        self.id = self.ypos*width+self.xpos
         self.object = pygame.Rect(self.xpos, self.ypos, 1, 1)
-        gameArray[getArrayLocation([self.xpos, self.ypos], width)]["pheromone"]["blue"] -= self.strength
-        if (gameArray[getArrayLocation([self.xpos, self.ypos], width)]["pheromone"]["blue"] < -1):
-            gameArray[getArrayLocation([self.xpos, self.ypos], width)]["pheromone"]["blue"] = -1
-        # self.strength = 1.0
+        gameArray[getArrayLocation([self.xpos, self.ypos], width)]["pheromone"]["blue"] = self.strength
+        # if (gameArray[getArrayLocation([self.xpos, self.ypos], width)]["pheromone"]["blue"] < -1):
+        #     gameArray[getArrayLocation([self.xpos, self.ypos], width)]["pheromone"]["blue"] = -1
+    
+    def blur(self):
+        value = gameArray[getArrayLocation([self.xpos, self.ypos], width)]["pheromone"]["blue"]
+        value += gameArray[getArrayLocation([self.xpos+1, self.ypos], width)]["pheromone"]["blue"]
+        value += gameArray[getArrayLocation([self.xpos-1, self.ypos], width)]["pheromone"]["blue"]
+        x = value/3 - 0.03
+        if (x < 0):
+            x = 0
+        gameArray[getArrayLocation([self.xpos, self.ypos], width)]["pheromone"]["blue"] = x
+
 
 class Environment():
     def __init__(self, width, height, number_of_ants):
@@ -129,11 +163,17 @@ class Environment():
         self._height = height
 
         self._running = True
-        self.screen = pygame.display.set_mode([width, height])
+
+        self.screen = pygame.display.set_mode((width, height), HWSURFACE|DOUBLEBUF|RESIZABLE)
+        self.fake_screen = self.screen.copy()
+
+        pygame.display.set_caption("Ant Boi Sim")
+        self.clock = pygame.time.Clock()
+
         self.resetWindow()
 
         self.nest = Nest()
-        self.pheromones = []
+        self.pheromones = {}
         self.number_of_ants = number_of_ants
         self.ants = []
         for i in range(number_of_ants):
@@ -142,25 +182,33 @@ class Environment():
     def resetWindow(self):
         # self.screen.fill((78, 42, 42))
         self.screen.fill((255, 255, 255))
+        self.fake_screen.fill((255, 255, 255))
+        pass
     
     def display(self):
-        pygame.draw.rect(self.screen, (255,0,0), self.nest.object)
-        for ant in self.ants:
-            pygame.draw.rect(self.screen, (0,0,0), ant.object)
         for pheromone in self.pheromones:
-            s = gameArray[getArrayLocation([pheromone.xpos, pheromone.ypos], width)]["pheromone"]["blue"]*-1
-            pygame.draw.rect(self.screen, (0,0,math.floor(255*s)), pheromone.object)
+            b = gameArray[getArrayLocation([self.pheromones[pheromone].xpos, self.pheromones[pheromone].ypos], width)]["pheromone"]["blue"]*-1
+            self.pheromones[pheromone].blur()
+            if (b<0.3):
+                b = 0.3
+            pygame.draw.rect(self.fake_screen, hsl2rgb(222, 63, 100*b), self.pheromones[pheromone].object)
+        for ant in self.ants:
+            pygame.draw.rect(self.fake_screen, (0,0,0), ant.object)
+        pygame.draw.rect(self.fake_screen, (255,0,0), self.nest.object)
 
     def handle_event(self, event):
         if event.type == pygame.QUIT:
             self._running = False
         elif event.type == pygame.MOUSEBUTTONUP:
             pos = pygame.mouse.get_pos()
+        elif event.type == VIDEORESIZE:
+            self.screen = pygame.display.set_mode(event.size, HWSURFACE|DOUBLEBUF|RESIZABLE)
 
 ## VARS
 pygame.init()
-width = math.floor(1280/4)
-height = math.floor(960/4)
+width = math.floor(1280/3)
+height = math.floor(960/3)
+zoom = 4.0
 _sSize = [width, height]
 relX = math.floor(width/2)
 relY = math.floor(height/2)
@@ -171,11 +219,6 @@ for i in range(_sSize[0]*_sSize[1]):
     gameArray.append({"ants":[], "pheromone": {"blue": 0, "red": 0}, "food": [], "walkable": True})
 
 game = Environment(_sSize[0], _sSize[1], 10)
-# for ant in game.ants:
-#     ant.Move()
-#     pass
-
-# gameArray[math.floor(len(gameArray)/2)]["pheromone"] = 100
 
 ## MAIN
 while game._running:
@@ -184,11 +227,13 @@ while game._running:
         ant.Move()
         # pass
 
-    game.display()
-
     for event in pygame.event.get():
         game.handle_event(event)
     # "Flip the display" - (update the whole screen)
+
+    game.display()
+    game.screen.blit(pygame.transform.scale(game.fake_screen, game.screen.get_rect().size), (0,0))
+
     pygame.display.flip()
 
 # Done! Time to quit.
