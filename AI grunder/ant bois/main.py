@@ -113,7 +113,8 @@ class Ant():
         bestOption = max(pheromoneArray, key = lambda k: pheromoneArray[k])
         if pheromoneArray[bestOption] == 0:
             bestOption = choice(options)
-        # game.pheromones.append(Pheromone(self))
+        # print(getArrayLocation([self.xpos, self.ypos], width))
+        game.pheromones[getArrayLocation([self.xpos, self.ypos], width)] = Pheromone(self)
         return bestOption
     
     def Move(self):
@@ -135,12 +136,12 @@ class Ant():
 
 
 class Pheromone():
-    def __init__(self, ant, strength=0.05):
+    def __init__(self, ant, strength=0.7):
         self.xpos = ant.xpos
         self.ypos = ant.ypos
         self.strength = strength
         self.age = 0
-        self.id = self.ypos*width+self.xpos
+        self.id = getArrayLocation([self.xpos, self.ypos], width)
         self.object = pygame.Rect(self.xpos, self.ypos, 1, 1)
         gameArray[getArrayLocation([self.xpos, self.ypos], width)]["pheromone"]["blue"] = self.strength
         # if (gameArray[getArrayLocation([self.xpos, self.ypos], width)]["pheromone"]["blue"] < -1):
@@ -148,12 +149,18 @@ class Pheromone():
     
     def blur(self):
         value = gameArray[getArrayLocation([self.xpos, self.ypos], width)]["pheromone"]["blue"]
-        value += gameArray[getArrayLocation([self.xpos+1, self.ypos], width)]["pheromone"]["blue"]
-        value += gameArray[getArrayLocation([self.xpos-1, self.ypos], width)]["pheromone"]["blue"]
-        x = value/3 - 0.03
-        if (x < 0):
-            x = 0
+        x = value - 0.001
+        # x = value - 0.05
         gameArray[getArrayLocation([self.xpos, self.ypos], width)]["pheromone"]["blue"] = x
+    
+    def delete(self):
+        x = gameArray[getArrayLocation([self.xpos, self.ypos], width)]["pheromone"]["blue"]
+        if (x < 0):
+            gameArray[getArrayLocation([self.xpos, self.ypos], width)]["pheromone"]["blue"] = 0
+            # game.pheromones.pop(self.id)
+            return True
+            # Delete the pheromone instance
+        return False
 
 
 class Environment():
@@ -187,11 +194,9 @@ class Environment():
     
     def display(self):
         for pheromone in self.pheromones:
-            b = gameArray[getArrayLocation([self.pheromones[pheromone].xpos, self.pheromones[pheromone].ypos], width)]["pheromone"]["blue"]*-1
-            self.pheromones[pheromone].blur()
-            if (b<0.3):
-                b = 0.3
+            b = 1-gameArray[getArrayLocation([self.pheromones[pheromone].xpos, self.pheromones[pheromone].ypos], width)]["pheromone"]["blue"]
             pygame.draw.rect(self.fake_screen, hsl2rgb(222, 63, 100*b), self.pheromones[pheromone].object)
+            self.pheromones[pheromone].blur()
         for ant in self.ants:
             pygame.draw.rect(self.fake_screen, (0,0,0), ant.object)
         pygame.draw.rect(self.fake_screen, (255,0,0), self.nest.object)
@@ -225,7 +230,13 @@ while game._running:
     game.resetWindow()
     for ant in game.ants:
         ant.Move()
-        # pass
+        # pass¨
+    to_clear = []
+    for pheromone in game.pheromones:
+        if game.pheromones[pheromone].delete():
+            to_clear.append(pheromone)
+    for val in to_clear:
+        game.pheromones.pop(val)
 
     for event in pygame.event.get():
         game.handle_event(event)
