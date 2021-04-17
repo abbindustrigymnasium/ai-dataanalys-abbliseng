@@ -79,96 +79,102 @@ def hsl2rgb(h, s, l):
 
 class Nest():
     def __init__(self):
-        self.xpos = math.floor(width/2)
-        self.ypos = math.floor(height/2)
+        self.x = math.floor(width/2)
+        self.y = math.floor(height/2)
         self.object = pygame.Rect((relX-5, relY-5), (5, 5))
 
 class Ant():
     def __init__(self, nest):
-        self.xpos = nest.xpos
-        self.ypos = nest.ypos
+        self.x = nest.x
+        self.y = nest.y
         self.speed = randint(1,10)
         self.freedom = random()
         self.dir = randint(0,4)
         self.viewdist = randint(5,10)
-        self.object = pygame.Rect(self.xpos, self.ypos, 1, 1)
-        self.scout = True
+        self.object = pygame.Rect(self.x, self.y, 1, 1)
+        self.scout = not True
         # Other things like freedom, speed and stuff
+    def checkIfYummy(self):
+        if (gameArray[getArrayLocation([self.x, self.y], width)]["food"])
     
-    def getMovement(self):
-        pheromoneArray = {}
-        optionsA = pointsInCircle([self.xpos, self.ypos], self.viewdist)
-        options = []
-        # forEveryPointInCircle([self.xpos, self.ypos], 40, debugDraw)
-        for option in optionsA:
-            p = getArrayLocation(option, width)
-            if (p > 0 and p < width*height-1):
-                options.append(getArrayLocation(option, width))
-        # print(options)
-        if (randint(0,10)<=self.freedom*10):
-            return choice(options)
-        for option in options:
-            pheromoneValue = gameArray[option]["pheromone"]["blue"]
-            pheromoneArray[option] = pheromoneValue
-        bestOption = max(pheromoneArray, key = lambda k: pheromoneArray[k])
-        if pheromoneArray[bestOption] == 0:
-            bestOption = choice(options)
-        # print(getArrayLocation([self.xpos, self.ypos], width))
-        game.pheromones[getArrayLocation([self.xpos, self.ypos], width)] = Pheromone(self, self.scout)
-        return bestOption
+    def getTarget(self):
+        possible_options = pointsInCircle([self.x, self.y], self.viewdist)
+        possiblier_options = {}
+        for might_be_possiblier in possible_options:
+            if (getArrayLocation(might_be_possiblier, width) > 0 and getArrayLocation(might_be_possiblier, width) < width*height-1):
+                possiblier_options[might_be_possiblier] = gameArray[might_be_possiblier]["pheromone"]
+        target = max(possiblier_options, key=lambda x: possiblier_options[x])
+        if (random()<=self.freedom):
+            target = choice(possiblier_options)
+        return target
     
     def Move(self):
-        a = self.getMovement()
-        target = fromArrayLocation(a, width)
-        # debugDraw(target)
+        target = fromArrayLocation(self.getTarget(), width)
 
-        if (self.xpos < target[0]):
-            self.xpos += 1
-        elif (self.xpos > target[0]):
-            self.xpos -= 1
-        if (self.ypos < target[1]):
-            self.ypos += 1
-        elif (self.ypos > target[1]):
-            self.ypos -= 1
+        # a = self.getMovement()
+        # target = fromArrayLocation(a, width)
+        # if (gameArray[a]["food"] != None):
+        #     print("Yum yummy!")
+        # # debugDraw(target)
 
-        self.object.x = self.xpos
-        self.object.y = self.ypos
+        if (self.x < target[0]):
+            self.x += 1
+        elif (self.x > target[0]):
+            self.x -= 1
+        if (self.y < target[1]):
+            self.y += 1
+        elif (self.y > target[1]):
+            self.y -= 1
 
+        self.object.x = self.x
+        self.object.y = self.y
+
+        self.checkIfYummy()
 
 class Pheromone():
     def __init__(self, ant, scout, strength=0.7):
-        self.xpos = ant.xpos
-        self.ypos = ant.ypos
+        self.x = ant.x
+        self.y = ant.y
         self.strength = strength
         self.age = 0
-        self.id = getArrayLocation([self.xpos, self.ypos], width)
-        self.object = pygame.Rect(self.xpos, self.ypos, 1, 1)
+        self.id = getArrayLocation([self.x, self.y], width)
+        self.object = pygame.Rect(self.x, self.y, 1, 1)
         self.red = scout
-        if (self.red):
-            gameArray[getArrayLocation([self.xpos, self.ypos], width)]["pheromone"]["blue"] = self.strength
-        else:
-            gameArray[getArrayLocation([self.xpos, self.ypos], width)]["pheromone"]["blue"] = -self.strength
+        # if (self.red):
+        #     gameArray[getArrayLocation([self.x, self.y], width)]["pheromone"]["blue"] = self.strength
+        # else:
+        #     gameArray[getArrayLocation([self.x, self.y], width)]["pheromone"]["blue"] = -self.strength
     
     def blur(self):
-        value = gameArray[getArrayLocation([self.xpos, self.ypos], width)]["pheromone"]["blue"]
-        if (self.red):
-            x = value - 0.05
-        else:
-            x = value + 0.05
-        gameArray[getArrayLocation([self.xpos, self.ypos], width)]["pheromone"]["blue"] = x
+        # value = gameArray[getArrayLocation([self.x, self.y], width)]["pheromone"]["blue"]
+        # if (self.red):
+        #     x = value - 0.05
+        # else:
+        #     x = value + 0.05
+        # gameArray[getArrayLocation([self.x, self.y], width)]["pheromone"]["blue"] = x
+        pass
     
     def delete(self):
-        x = gameArray[getArrayLocation([self.xpos, self.ypos], width)]["pheromone"]["blue"]
-        if (x > 0 and not self.red):
-            gameArray[getArrayLocation([self.xpos, self.ypos], width)]["pheromone"]["blue"] = 0
-            # game.pheromones.pop(self.id)
-            return True
-        elif (x < 0 and self.red):
-            gameArray[getArrayLocation([self.xpos, self.ypos], width)]["pheromone"]["blue"] = 0
-            return True
-            # Delete the pheromone instance
-        return False
+        # x = gameArray[getArrayLocation([self.x, self.y], width)]["pheromone"]["blue"]
+        # if (x > 0 and not self.red):
+        #     gameArray[getArrayLocation([self.x, self.y], width)]["pheromone"]["blue"] = 0
+        #     # game.pheromones.pop(self.id)
+        #     return True
+        # elif (x < 0 and self.red):
+        #     gameArray[getArrayLocation([self.x, self.y], width)]["pheromone"]["blue"] = 0
+        #     return True
+        #     # Delete the pheromone instance
+        # return False
+        pass
 
+class Food:
+    def __init__(self, pos):
+        # self.x = pos[0]
+        # self.y = pos[1]
+        # self.object = pygame.Rect(self.x,self.y,1,1)
+        # game.food.append(getArrayLocation(pos, width))
+        # gameArray[getArrayLocation(pos, width)]["food"] = True
+        pass
 
 class Environment():
     def __init__(self, width, height, number_of_ants):
@@ -188,6 +194,8 @@ class Environment():
 
         self.nest = Nest()
         self.pheromones = {}
+        self.food = []
+
         self.number_of_ants = number_of_ants
         self.ants = []
         for i in range(number_of_ants):
@@ -200,23 +208,27 @@ class Environment():
         pass
     
     def display(self):
-        for pheromone in self.pheromones:
-            if (not self.pheromones[pheromone].red):
-                b = 1-gameArray[getArrayLocation([self.pheromones[pheromone].xpos, self.pheromones[pheromone].ypos], width)]["pheromone"]["blue"]*-1
-                pygame.draw.rect(self.fake_screen, hsl2rgb(222, 63, 100*b), self.pheromones[pheromone].object)
-            else:
-                b = 1-gameArray[getArrayLocation([self.pheromones[pheromone].xpos, self.pheromones[pheromone].ypos], width)]["pheromone"]["blue"]
-                pygame.draw.rect(self.fake_screen, hsl2rgb(13, 100, 100*b), self.pheromones[pheromone].object)
-            self.pheromones[pheromone].blur()
-        for ant in self.ants:
-            pygame.draw.rect(self.fake_screen, (0,0,0), ant.object)
-        pygame.draw.rect(self.fake_screen, (255,0,0), self.nest.object)
+        pass
+        # for pheromone in self.pheromones:
+        #     if (not self.pheromones[pheromone].red):
+        #         b = 1-gameArray[getArrayLocation([self.pheromones[pheromone].x, self.pheromones[pheromone].y], width)]["pheromone"]["blue"]*-1
+        #         pygame.draw.rect(self.fake_screen, hsl2rgb(222, 63, 100*b), self.pheromones[pheromone].object)
+        #     else:
+        #         b = 1-gameArray[getArrayLocation([self.pheromones[pheromone].x, self.pheromones[pheromone].y], width)]["pheromone"]["blue"]
+        #         pygame.draw.rect(self.fake_screen, hsl2rgb(13, 100, 100*b), self.pheromones[pheromone].object)
+        #     self.pheromones[pheromone].blur()
+        # for f in self.food:
+        #     pygame.draw.rect(self.fake_screen, (0, 255, 0), gameArray[f]["food"].object)
+        # for ant in self.ants:
+        #     pygame.draw.rect(self.fake_screen, (0,0,0), ant.object)
+        # pygame.draw.rect(self.fake_screen, (255,0,0), self.nest.object)
 
     def handle_event(self, event):
         if event.type == pygame.QUIT:
             self._running = False
         elif event.type == pygame.MOUSEBUTTONUP:
             pos = pygame.mouse.get_pos()
+            # forEveryPointInCircle(pos, 10, Food)
         elif event.type == VIDEORESIZE:
             self.screen = pygame.display.set_mode(event.size, HWSURFACE|DOUBLEBUF|RESIZABLE)
 
@@ -232,22 +244,22 @@ relY = math.floor(height/2)
 
 gameArray = []
 for i in range(_sSize[0]*_sSize[1]):
-    gameArray.append({"ants":[], "pheromone": {"blue": 0, "red": 0}, "food": [], "walkable": True})
+    gameArray.append({"ants": None, "pheromone": 0, "food": None, "walkable": True, "nest": False})
 
 game = Environment(_sSize[0], _sSize[1], 500)
 
 ## MAIN
 while game._running:
     game.resetWindow()
-    for ant in game.ants:
-        ant.Move()
+    # for ant in game.ants:
+    #     ant.Move()
         # pass¨
-    to_clear = []
-    for pheromone in game.pheromones:
-        if game.pheromones[pheromone].delete():
-            to_clear.append(pheromone)
-    for val in to_clear:
-        game.pheromones.pop(val)
+    # to_clear = []
+    # for pheromone in game.pheromones:
+    #     if game.pheromones[pheromone].delete():
+    #         to_clear.append(pheromone)
+    # for val in to_clear:
+    #     game.pheromones.pop(val)
 
     for event in pygame.event.get():
         game.handle_event(event)
