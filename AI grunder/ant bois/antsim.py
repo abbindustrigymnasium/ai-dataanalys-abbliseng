@@ -6,8 +6,10 @@ import threading
 
 pygame.init()
 
-_width = math.floor(1280/3)
-_height = math.floor(960/3)
+# _width = math.floor(1280/3)
+# _height = math.floor(960/3)
+_width = math.floor(1920/5)
+_height = math.floor(1080/5)
 _sSize = [_width, _height]
 _ratio = _height/_width
 relX = math.floor(_width/2)
@@ -74,7 +76,7 @@ class Nest:
         self.tiles = [] 
         for tile in pointsInCircle([self.x, self.y], 3):
             self.tiles.append(pygame.Rect(tile[0], tile[1], 1, 1))
-            self.envir.board[getArrayLocation([tile[0], tile[1]])]["nest"] = True
+            self.envir.map[getArrayLocation([tile[0], tile[1]])].type = MapPoint.TYPE_NEST
     def display(self):
         for tile in self.tiles:
             pygame.draw.rect(self.envir.fake_screen, (255,0,0), tile)
@@ -85,46 +87,9 @@ class Food:
         self.y = pos[1]
         self.envir = envir
         self.object = pygame.Rect(self.x, self.y, 1, 1)
-        self.envir.board[getArrayLocation([self.x, self.y])]["food"] = True
-        self.envir.board[getArrayLocation([self.x, self.y])]["value"] = 1.0
-        # self.envir.food.append(self)
+        self.envir.map[getArrayLocation([self.x, self.y])].type = MapPoint.TYPE_FOOD
     def display(self):
         pygame.draw.rect(self.envir.fake_screen, (0, 255, 0), self.object)
-
-class Pheromone:
-    def __init__(self, envir, value, pos=None, ant=None):
-        self.x = 0
-        self.y = 0
-        if (ant):
-            self.x = ant.x
-            self.y = ant.y
-        elif (pos):
-            self.x = pos[0]
-            self.y = pos[1]
-        self.envir = envir
-        self.value = value
-        self.object = pygame.Rect(self.x, self.y, 1, 1)
-        self.envir.board[getArrayLocation([self.x, self.y])]["value"] = self.value
-        self.envir.pheromones.append(self)
-    def blur(self):
-        if self.value < 0:
-            self.value += 0.02
-            if (self.value >= 0):
-                self.value = 0
-        elif (self.value > 0):
-            self.value += 0.002
-            if (self.value >= 1):
-                self.value = 0
-        else:
-            self.envir.board[getArrayLocation([self.x, self.y])]["value"] = 0
-            return True # Destroy the instance
-        self.envir.board[getArrayLocation([self.x, self.y])]["value"] = self.value
-        return False
-    def display(self):
-        if (self.value < 0):
-            pygame.draw.rect(self.envir.fake_screen, hsl2rgb(222, 63, 100*(1-abs(self.value))), self.object)
-        else:
-            pygame.draw.rect(self.envir.fake_screen, hsl2rgb(13, 100, 100*(1-self.value)), self.object)
 
 class Ant:
 
@@ -132,6 +97,16 @@ class Ant:
     TYPE_FOLLOWER = 1
     TYPE_RETURNER = 2
     TYPE_RETURNER2 = 3
+
+    MAX_TRIP = 450 # self.envir._width*2+self.envir._height
+
+    PH_FOOD_MULTIPLIER = 5
+    PH_FOOD_MULTIPLIER_LENGTH = 10
+
+    MAX_PH_DROP = 20.0
+    MIN_PH_DROP = 0.0
+
+    SIDE_DROP = 2
 
     def __init__(self, envir, nest, t):
         self.x = nest.x
@@ -144,8 +119,26 @@ class Ant:
         self.viewdist = 5
         self.freedom = randint(0,6)/10
         self.scout = True
+        self.ph_increase = Ant.MAX_PH_DROP
+        self.follower_to_seeker = self.ph_increase/10
     def display(self):
         pygame.draw.rect(self.envir.fake_screen, (0, 0, 0), self.object)
+    def pheromoneDrop(self, mapPoint, dirX, dirY):
+        if (Ant.MAX_TRIP-len(self.move_hist) < Ant.PH_FOOD_MULTIPLIER_LENGTH):
+            ph_inc = self.ph_increase * Ant.PH_FOOD_MULTIPLIER
+            ph_inc_side = self.ph_increase * Ant.PH_FOOD_MULTIPLIER / Ant.SIDE_DROP
+        else:
+            ph_inc = self.ph_increase
+            ph_inc_side = self.ph_increase/Ant.SIDE_DROP
+        mapPoint.pheromoneIncrease(ph_inc)
+        self.envir.pheromones.append((self.x, self.y))
+        if (abs(dirX) <= 1 and abs(dirY) <= 1):
+            for i in range(-1,2):
+                for j in range(-1,2):
+                    if (i==0 and j==0):
+                        continue
+                    self.envir.map[getArrayLocation([self.x+i,self.y+j])].pheromoneIncrease(ph_inc_side)
+                    self.envir.pheromones.append((self.x+i, self.y+j))
     def findSeekerTarger(self):
         if self.dir >= 4:
             self.dir = 0
@@ -160,28 +153,38 @@ class Ant:
             possible_target_points = [[self.x+1, self.y],[self.x-1, self.y],[self.x, self.y-1]]
         elif (self.dir == 3): # LEFT
             possible_target_points = [[self.x-1, self.y],[self.x, self.y-1],[self.x, self.y+1]]
-        # Random dir?
         if (randint(0,100) == randint(0,100)):
             self.dir += randint(-1,1)
+        self.move_hist.append([self.x, self.y])
         target = choice(possible_target_points)
+        for possible_target_point in possible_target_points:
+            if (getArrayLocation(possible_target_point) < 0 or getArrayLocation(possible_target_point) > (self.envir._height*self.envir._width)-1):
+                pass
+            else:
+                if (self.envir.map[getArrayLocation(possible_target_point)].type == MapPoint.TYPE_FOOD):
+                    target = possible_target_point
+                    break
         while (getArrayLocation(target) <= 0 or getArrayLocation(target) > (self.envir._height*self.envir._width)-1):
             self.dir += 2
             target = self.findSeekerTarger()
-        # print(target)
         return target
-    def goHome(self):
-        return [relX,relY]
+    def findReturnerTarget(self):
+        target = self.move_hist[-1]
+        self.move_hist.pop(-1)
+        return target
+    def findFollowerTarget(self):
+        pass
     def move(self):
-        # leave pheromone behind
-        if (self.scout):
-            if (self.envir.board[getArrayLocation([self.x, self.y])]["value"] <= 0):
-                # Pheromone(self.envir, -0.8, ant=self)
-                pass
-            # target = fromArrayLocation(self.findTarget())
+        if (self.type == Ant.TYPE_SEEKER):
             target = self.findSeekerTarger()
-        else:
-            Pheromone(self.envir, 0.001, ant=self)
-            target = self.goHome()
+            if (len(self.move_hist) >= Ant.MAX_TRIP):
+                self.type = Ant.TYPE_RETURNER2
+        elif (self.type == Ant.TYPE_RETURNER or self.type == Ant.TYPE_RETURNER2):
+            target = self.findReturnerTarget()
+            if (self.type == Ant.TYPE_RETURNER):
+                dirX = target[0]-self.x
+                dirY = target[1]-self.y
+                self.pheromoneDrop(self.envir.map[getArrayLocation([self.x, self.y])], dirX, dirY)
 
         if (self.x < target[0]):
             self.x += 1
@@ -191,15 +194,15 @@ class Ant:
             self.y += 1
         elif (self.y > target[1]):
             self.y -= 1
-        # Check if food is found
-        if (self.scout):
-            if (self.envir.board[getArrayLocation([self.x, self.y])]["food"]):
-                self.envir.board[getArrayLocation([self.x, self.y])]["food"] = False
-                del self.envir.food[getArrayLocation([self.x, self.y])]
-                self.scout = False
-        else:
-            if (self.envir.board[getArrayLocation([self.x, self.y])]["nest"]):
-                self.scout = True
+        
+        if(self.type == Ant.TYPE_RETURNER or self.type == Ant.TYPE_RETURNER2):
+            if self.envir.map[getArrayLocation([self.x, self.y])].type == MapPoint.TYPE_NEST:
+                self.type = Ant.TYPE_SEEKER
+        if self.envir.map[getArrayLocation([self.x, self.y])].type == MapPoint.TYPE_FOOD:
+            self.envir.map[getArrayLocation([self.x, self.y])].type = MapPoint.TYPE_EMPTY
+            del self.envir.food[getArrayLocation([self.x, self.y])]
+            self.type = Ant.TYPE_RETURNER
+
         self.object.x = self.x
         self.object.y = self.y
 
@@ -210,17 +213,25 @@ class MapPoint:
     TYPE_NEST = 2
     TYPE_OBSTACLE = 3
 
+    MAX_CONCENTRATION = 100.0
+
     def __init__(self, position, t):
         self.type = t
         self.pos = position
         self.decay_constant = 0.006
         self.pheromone_concentration = 0
 
-    def pheromoneDecay(self):
+    def pheromoneDecay(self, envir, pos):
         self.pheromone_concentration = (1-self.decay_constant)*self.pheromone_concentration
+        if (self.pheromone_concentration <= 0.01):
+            i = envir.pheromones.index(pos)
+            envir.pheromones.pop(i)
+            
     def pheromoneIncrease(self, val):
         if (self.type != MapPoint.TYPE_OBSTACLE):
             self.pheromone_concentration += val
+            if (self.pheromone_concentration > MapPoint.MAX_CONCENTRATION):
+                self.pheromone_concentration = MapPoint.MAX_CONCENTRATION
 
 class Environment:
     def __init__(self, width, height, number_of_ants):
@@ -230,16 +241,6 @@ class Environment:
         self._running = True
         self.screen = pygame.display.set_mode((width, height), HWSURFACE|DOUBLEBUF|RESIZABLE)
         self.fake_screen = self.screen.copy()
-
-        self.board = []
-        for i in range(self._width*self._height):
-            self.board.append({
-                "id": i,
-                "walkable": True,
-                "nest": False,
-                "food": False,
-                "value": 0
-            })
 
         self.map = []
         for i in range(self._width*self._height):
@@ -258,18 +259,18 @@ class Environment:
     def handle_event(self, event):
         if event.type == pygame.QUIT:
             self._running = False
-        elif event.type == pygame.MOUSEBUTTONUP and pygame.key.get_mods()&pygame.KMOD_CTRL:
-            p = [0,0]
-            pos = pygame.mouse.get_pos()
-            p[0] = math.floor((pos[0]/self.screen.get_width())*self._width)
-            p[1] = math.floor((pos[1]/self.screen.get_height())*self._height)
-            points = pointsInCircle(p, 5)
-            if (pygame.key.get_mods()&pygame.KMOD_ALT):
-                for p in points:
-                    Pheromone(self, 0.7, pos=p)
-            else:
-                for p in points:
-                    Pheromone(self, -0.7, pos=p)
+        # elif event.type == pygame.MOUSEBUTTONUP and pygame.key.get_mods()&pygame.KMOD_CTRL:
+        #     p = [0,0]
+        #     pos = pygame.mouse.get_pos()
+        #     p[0] = math.floor((pos[0]/self.screen.get_width())*self._width)
+        #     p[1] = math.floor((pos[1]/self.screen.get_height())*self._height)
+        #     points = pointsInCircle(p, 5)
+        #     if (pygame.key.get_mods()&pygame.KMOD_ALT):
+        #         for p in points:
+        #             Pheromone(self, 0.7, pos=p)
+        #     else:
+        #         for p in points:
+        #             Pheromone(self, -0.7, pos=p)
         elif event.type == pygame.MOUSEBUTTONUP and pygame.key.get_mods()&pygame.KMOD_ALT:
             p = [0,0]
             pos = pygame.mouse.get_pos()
@@ -290,7 +291,9 @@ class Environment:
 
     def display(self):
         for pheromone in self.pheromones:
-            pheromone.display()
+            value = 1-self.map[getArrayLocation(pheromone)].pheromone_concentration/MapPoint.MAX_CONCENTRATION
+            # print(value)
+            pygame.draw.circle(self.fake_screen,hsl2rgb(264, 100, 100*value), pheromone, 1)
         for food in self.food:
             self.food[food].display()
         self.nest.display()
@@ -298,24 +301,17 @@ class Environment:
             ant.display()
     
     def handle_pheromones(self):
-        self.pheromones_to_clear = []
         for pheromone in self.pheromones:
-            if (pheromone.blur()):
-                self.pheromones_to_clear.append(pheromone)
-        for i in self.pheromones_to_clear:
-            self.pheromones.remove(i)
-    
+            self.map[getArrayLocation(pheromone)].pheromoneDecay(self, pheromone)
     def handle_ants(self):
         for ant in self.ants:
             ant.move()
 
 
-overlord = Environment(_width, _height, 350)
+overlord = Environment(_width, _height, 100)
 
 while overlord._running:
     overlord.resetWindow()
-
-    debugDraw([50,50])
 
     for event in pygame.event.get():
         overlord.handle_event(event)
