@@ -13,6 +13,9 @@ _ratio = _height/_width
 relX = math.floor(_width/2)
 relY = math.floor(_height/2)
 
+##
+##
+
 def pointsInCircle(location, radius):
     points = []
     # Calculate bounding rectangle
@@ -83,7 +86,6 @@ class Environment:
             self.screen = pygame.display.set_mode(newWindowSize, HWSURFACE|DOUBLEBUF|RESIZABLE)
     
     def resetWindow(self):
-        # self.screen.fill((78, 42, 42))
         self.screen.fill((255, 255, 255))
         self.fake_screen.fill((255, 255, 255))
         pass
