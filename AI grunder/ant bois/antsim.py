@@ -63,13 +63,16 @@ def hsl2rgb(h, s, l):
     b = round((b+m)*255)
     return((r,g,b))
 
+def debugDraw(pos):
+    pygame.draw.circle(overlord.fake_screen, (0, 255, 0), (pos[0], pos[1]), 1)
+
 class Nest:
     def __init__(self, envir):
         self.x = relX
         self.y = relY
         self.envir = envir
         self.tiles = [] 
-        for tile in pointsInCircle([self.x, self.y], 10):
+        for tile in pointsInCircle([self.x, self.y], 3):
             self.tiles.append(pygame.Rect(tile[0], tile[1], 1, 1))
             self.envir.board[getArrayLocation([tile[0], tile[1]])]["nest"] = True
     def display(self):
@@ -83,7 +86,8 @@ class Food:
         self.envir = envir
         self.object = pygame.Rect(self.x, self.y, 1, 1)
         self.envir.board[getArrayLocation([self.x, self.y])]["food"] = True
-        self.envir.food.append(self)
+        self.envir.board[getArrayLocation([self.x, self.y])]["value"] = 1.0
+        # self.envir.food.append(self)
     def display(self):
         pygame.draw.rect(self.envir.fake_screen, (0, 255, 0), self.object)
 
@@ -104,12 +108,12 @@ class Pheromone:
         self.envir.pheromones.append(self)
     def blur(self):
         if self.value < 0:
-            self.value += 0.002
+            self.value += 0.02
             if (self.value >= 0):
                 self.value = 0
         elif (self.value > 0):
-            self.value -= 0.002
-            if (self.value <= 0):
+            self.value += 0.002
+            if (self.value >= 1):
                 self.value = 0
         else:
             self.envir.board[getArrayLocation([self.x, self.y])]["value"] = 0
@@ -130,20 +134,44 @@ class Ant:
         self.object = pygame.Rect(self.x, self.y, 1, 1)
         self.viewdist = 5
         self.freedom = randint(0,6)/10
+        self.scout = True
     def display(self):
         pygame.draw.rect(self.envir.fake_screen, (0, 0, 0), self.object)
     def findTarget(self):
         possible_targets = {}
         possible_target_points = pointsInCircle([self.x, self.y], self.viewdist)
+        # random chance to just pick a random target instead of following the rule bellow
+        if (random() <= self.freedom):
+            target = getArrayLocation(choice(possible_target_points))
+            return target
+        #
         for possible_target_point in possible_target_points:
             if (getArrayLocation(possible_target_point) > 0 and getArrayLocation(possible_target_point) < _width*_height-1):
                 possible_targets[getArrayLocation(possible_target_point)] = self.envir.board[getArrayLocation(possible_target_point)]["value"]
+        if len(possible_targets) <= 0:
+            return getArrayLocation(self.x, self.y)
         target = max(possible_targets, key=lambda x: possible_targets[x])
-        if (random() <= self.freedom):
-            target = getArrayLocation(choice(possible_target_points))
+        # if the target value is zero pick a random tile with the same value
+        if (self.envir.board[target]["value"] == 0):
+            zero_points = []
+            for possible_target_point in possible_target_points:
+                if (getArrayLocation(possible_target_point) > 0 and getArrayLocation(possible_target_point) < _width*_height-1 and self.envir.board[getArrayLocation(possible_target_point)]["value"] == 0):
+                    zero_points.append(possible_target_point)
+            target = getArrayLocation(choice(zero_points))
         return target
+    def goHome(self):
+        return [relX,relY]
     def move(self):
-        target = fromArrayLocation(self.findTarget())
+        # leave pheromone behind
+        if (self.scout):
+            if (self.envir.board[getArrayLocation([self.x, self.y])]["value"] <= 0):
+                # Pheromone(self.envir, -0.8, ant=self)
+                pass
+            target = fromArrayLocation(self.findTarget())
+        else:
+            Pheromone(self.envir, 0.001, ant=self)
+            target = self.goHome()
+
         if (self.x < target[0]):
             self.x += 1
         elif (self.x > target[0]):
@@ -152,7 +180,15 @@ class Ant:
             self.y += 1
         elif (self.y > target[1]):
             self.y -= 1
-
+        # Check if food is found
+        if (self.scout):
+            if (self.envir.board[getArrayLocation([self.x, self.y])]["food"]):
+                self.envir.board[getArrayLocation([self.x, self.y])]["food"] = False
+                del self.envir.food[getArrayLocation([self.x, self.y])]
+                self.scout = False
+        else:
+            if (self.envir.board[getArrayLocation([self.x, self.y])]["nest"]):
+                self.scout = True
         self.object.x = self.x
         self.object.y = self.y
 
@@ -177,7 +213,7 @@ class Environment:
 
         ##
         self.nest = Nest(self)
-        self.food = []
+        self.food = {}
         self.pheromones = []
         self.pheromones_to_clear = []
         self.ants = []
@@ -197,10 +233,10 @@ class Environment:
             points = pointsInCircle(p, 5)
             if (pygame.key.get_mods()&pygame.KMOD_ALT):
                 for p in points:
-                    Pheromone(self, 1, pos=p)
+                    Pheromone(self, 0.7, pos=p)
             else:
                 for p in points:
-                    Pheromone(self, -1, pos=p)
+                    Pheromone(self, -0.7, pos=p)
         elif event.type == pygame.MOUSEBUTTONUP and pygame.key.get_mods()&pygame.KMOD_ALT:
             p = [0,0]
             pos = pygame.mouse.get_pos()
@@ -208,7 +244,7 @@ class Environment:
             p[1] = math.floor((pos[1]/self.screen.get_height())*self._height)
             foodPoints = pointsInCircle(p, 10)
             for point in foodPoints:
-                Food(self, point)
+                overlord.food[getArrayLocation(point)] = Food(self, point)
         elif event.type == VIDEORESIZE:
             newWindowSize = (event.size[0], math.floor(event.size[0]*_ratio))
             self.screen = pygame.display.set_mode(newWindowSize, HWSURFACE|DOUBLEBUF|RESIZABLE)
@@ -223,7 +259,7 @@ class Environment:
         for pheromone in self.pheromones:
             pheromone.display()
         for food in self.food:
-            food.display()
+            self.food[food].display()
         self.nest.display()
         for ant in self.ants:
             ant.display()
@@ -241,10 +277,12 @@ class Environment:
             ant.move()
 
 
-overlord = Environment(_width, _height, 10)
+overlord = Environment(_width, _height, 350)
 
 while overlord._running:
     overlord.resetWindow()
+
+    debugDraw([50,50])
 
     for event in pygame.event.get():
         overlord.handle_event(event)
