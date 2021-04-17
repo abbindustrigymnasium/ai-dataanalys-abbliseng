@@ -1,6 +1,0 @@
-Ant sim
-
-The ants only see a portion in fron of them and always picks the best (or random) from these options
-They leave blue pheromones behind them to discourage others? And red when having food
-
-Pheromeones eventually fade out
