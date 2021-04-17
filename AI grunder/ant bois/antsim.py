@@ -127,9 +127,18 @@ class Pheromone:
             pygame.draw.rect(self.envir.fake_screen, hsl2rgb(13, 100, 100*(1-self.value)), self.object)
 
 class Ant:
-    def __init__(self, envir, nest):
+
+    TYPE_SEEKER = 0
+    TYPE_FOLLOWER = 1
+    TYPE_RETURNER = 2
+    TYPE_RETURNER2 = 3
+
+    def __init__(self, envir, nest, t):
         self.x = nest.x
         self.y = nest.y
+        self.type = t
+        self.move_hist = []
+        self.dir = randint(0,3) # 0-3
         self.envir = envir
         self.object = pygame.Rect(self.x, self.y, 1, 1)
         self.viewdist = 5
@@ -137,27 +146,28 @@ class Ant:
         self.scout = True
     def display(self):
         pygame.draw.rect(self.envir.fake_screen, (0, 0, 0), self.object)
-    def findTarget(self):
-        possible_targets = {}
-        possible_target_points = pointsInCircle([self.x, self.y], self.viewdist)
-        # random chance to just pick a random target instead of following the rule bellow
-        if (random() <= self.freedom):
-            target = getArrayLocation(choice(possible_target_points))
-            return target
-        #
-        for possible_target_point in possible_target_points:
-            if (getArrayLocation(possible_target_point) > 0 and getArrayLocation(possible_target_point) < _width*_height-1):
-                possible_targets[getArrayLocation(possible_target_point)] = self.envir.board[getArrayLocation(possible_target_point)]["value"]
-        if len(possible_targets) <= 0:
-            return getArrayLocation(self.x, self.y)
-        target = max(possible_targets, key=lambda x: possible_targets[x])
-        # if the target value is zero pick a random tile with the same value
-        if (self.envir.board[target]["value"] == 0):
-            zero_points = []
-            for possible_target_point in possible_target_points:
-                if (getArrayLocation(possible_target_point) > 0 and getArrayLocation(possible_target_point) < _width*_height-1 and self.envir.board[getArrayLocation(possible_target_point)]["value"] == 0):
-                    zero_points.append(possible_target_point)
-            target = getArrayLocation(choice(zero_points))
+    def findSeekerTarger(self):
+        if self.dir >= 4:
+            self.dir = 0
+        elif self.dir <= -1:
+            self.dir = 3
+        possible_target_points = []
+        if (self.dir == 0): # UP
+            possible_target_points = [[self.x+1, self.y],[self.x-1, self.y],[self.x, self.y+1]]
+        elif (self.dir == 1): # RIGHT
+            possible_target_points = [[self.x+1, self.y],[self.x, self.y-1],[self.x, self.y+1]]
+        elif (self.dir == 2): # DOWN
+            possible_target_points = [[self.x+1, self.y],[self.x-1, self.y],[self.x, self.y-1]]
+        elif (self.dir == 3): # LEFT
+            possible_target_points = [[self.x-1, self.y],[self.x, self.y-1],[self.x, self.y+1]]
+        # Random dir?
+        if (randint(0,100) == randint(0,100)):
+            self.dir += randint(-1,1)
+        target = choice(possible_target_points)
+        while (getArrayLocation(target) <= 0 or getArrayLocation(target) > (self.envir._height*self.envir._width)-1):
+            self.dir += 2
+            target = self.findSeekerTarger()
+        # print(target)
         return target
     def goHome(self):
         return [relX,relY]
@@ -167,7 +177,8 @@ class Ant:
             if (self.envir.board[getArrayLocation([self.x, self.y])]["value"] <= 0):
                 # Pheromone(self.envir, -0.8, ant=self)
                 pass
-            target = fromArrayLocation(self.findTarget())
+            # target = fromArrayLocation(self.findTarget())
+            target = self.findSeekerTarger()
         else:
             Pheromone(self.envir, 0.001, ant=self)
             target = self.goHome()
@@ -192,6 +203,25 @@ class Ant:
         self.object.x = self.x
         self.object.y = self.y
 
+class MapPoint:
+
+    TYPE_EMPTY = 0
+    TYPE_FOOD = 1
+    TYPE_NEST = 2
+    TYPE_OBSTACLE = 3
+
+    def __init__(self, position, t):
+        self.type = t
+        self.pos = position
+        self.decay_constant = 0.006
+        self.pheromone_concentration = 0
+
+    def pheromoneDecay(self):
+        self.pheromone_concentration = (1-self.decay_constant)*self.pheromone_concentration
+    def pheromoneIncrease(self, val):
+        if (self.type != MapPoint.TYPE_OBSTACLE):
+            self.pheromone_concentration += val
+
 class Environment:
     def __init__(self, width, height, number_of_ants):
         self._width = width
@@ -211,6 +241,9 @@ class Environment:
                 "value": 0
             })
 
+        self.map = []
+        for i in range(self._width*self._height):
+            self.map.append(MapPoint(fromArrayLocation(i),MapPoint.TYPE_EMPTY))
         ##
         self.nest = Nest(self)
         self.food = {}
@@ -220,7 +253,7 @@ class Environment:
         ##
 
         for i in range(number_of_ants):
-            self.ants.append(Ant(self, self.nest))
+            self.ants.append(Ant(self, self.nest, Ant.TYPE_SEEKER))
 
     def handle_event(self, event):
         if event.type == pygame.QUIT:
@@ -295,5 +328,3 @@ while overlord._running:
     pygame.display.flip()
 
 pygame.quit()
-
-# game = Environment(_sSize[0], _sSize[1], 500)

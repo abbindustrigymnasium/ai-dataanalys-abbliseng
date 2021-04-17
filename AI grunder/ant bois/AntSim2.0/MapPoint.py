@@ -9,8 +9,8 @@ class MapPoint:
     MAX_FOOD_CONCENTRATION = 30
     finite_food = True
 
-    def __init__(self, type, position):
-        self.type = type
+    def __init__(self, t, position):
+        self.type = t
         self.pheromone_concentration = 0
         self.position = position
         self.food_concentrarion = 0
