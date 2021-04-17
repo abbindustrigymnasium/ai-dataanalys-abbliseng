@@ -3,6 +3,8 @@ from pygame.locals import *
 import math
 from  random import choice, randrange, randint, random
 import threading
+##
+from MapPoint import MapPoint
 
 pygame.init()
 
