@@ -25,7 +25,8 @@ class Ant:
 
     SIDE_DROP = 2
 
-    def __init__(self, envir, nest, t):
+    def __init__(self, envir, nest, t, i = None):
+        self.id = i
         self.x = nest.x
         self.y = nest.y
         self.type = t
@@ -41,7 +42,9 @@ class Ant:
         self.follower_to_seeker = self.ph_increase/10
         self.seeker_prob = round(MapPoint.MAX_CONCENTRATION+MapPoint.MAX_CONCENTRATION*0.05)
     def display(self):
-        if (self.type == Ant.TYPE_RETURNER):
+        if (self.id != None):
+            pygame.draw.rect(self.envir.fake_screen, (201, 42, 42), self.object)
+        elif (self.type == Ant.TYPE_RETURNER):
             pygame.draw.rect(self.envir.fake_screen, (47, 168, 47), self.object)
         elif (self.type == Ant.TYPE_FOLLOWER):
             pygame.draw.rect(self.envir.fake_screen, (235, 147, 52), self.object)
@@ -87,7 +90,7 @@ class Ant:
         for possible_target_point in possible_target_points:
             if (checkIfFood(self, possible_target_point)):
                 break
-
+        behind = (self.x, self.y)
         if (self.dir == 0):
             behind = (self.x, self.y+1)
         elif (self.dir == 1):
@@ -97,7 +100,7 @@ class Ant:
         elif (self.dir == 3):
             behind = (self.x+1, self.y)
         
-        if (checkIfFood(self, behind)).
+        if (checkIfFood(self, behind)):
             target = behind
 
         while (getArrayLocation(target) <= 0 or getArrayLocation(target) > (self.envir._height*self.envir._width)-1):
@@ -188,7 +191,7 @@ class Ant:
                 for dy in range(-1,2):
                     if (dx == 0 and dy == 0):
                         continue
-                    if (round(self.envir.map[getArrayLocation([self.x, self.y])].pheromone_concentration > rnd)):
+                    if (round(self.envir.map[getArrayLocation([self.x+dx, self.y+dy])].pheromone_concentration > rnd)):
                         self.type = Ant.TYPE_FOLLOWER
                         break
             if (self.type != Ant.TYPE_FOLLOWER):

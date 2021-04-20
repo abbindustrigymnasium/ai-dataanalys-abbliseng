@@ -115,6 +115,7 @@ class Environment:
 
 
 overlord = Environment(_width, _height, 100)
+overlord.ants.append(Ant(overlord, overlord.nest, Ant.TYPE_SEEKER, "My"))
 
 # Corner food
 for x in range(10,25):

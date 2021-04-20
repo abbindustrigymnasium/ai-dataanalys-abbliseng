@@ -18,9 +18,8 @@ class MapPoint:
 
     def pheromoneDecay(self, envir=None, pos=None):
         self.pheromone_concentration = (1-MapPoint.DECAY_CONSTANT)*self.pheromone_concentration
-        # if (self.pheromone_concentration <= 0.0001):
-        #     i = envir.pheromones.index(pos)
-        #     envir.pheromones.pop(i)
+        if (self.pheromone_concentration <= 0.0000000000001):
+            self.pheromone_concentration = 0
             
     def pheromoneIncrease(self, val):
         if (self.type != MapPoint.TYPE_OBSTACLE):
