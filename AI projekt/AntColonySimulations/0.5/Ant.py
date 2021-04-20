@@ -30,6 +30,7 @@ class Ant:
         self.envir = envir
         self.object = pygame.Rect(self.x, self.y, 1, 1)
         self.viewdist = 5
+        self.is_carrying = False
         self.freedom = randint(0,6)/10
         self.scout = True
         self.ph_increase = Ant.MAX_PH_DROP
@@ -62,13 +63,13 @@ class Ant:
             self.dir = 3
         possible_target_points = []
         if (self.dir == 0): # UP
-            possible_target_points = [[self.x+1, self.y+1],[self.x-1, self.y+1],[self.x, self.y+1]]
+            possible_target_points = [[self.x+1, self.y],[self.x-1, self.y],[self.x, self.y+1]]
         elif (self.dir == 1): # RIGHT
-            possible_target_points = [[self.x+1, self.y],[self.x+1, self.y-1],[self.x+1, self.y+1]]
+            possible_target_points = [[self.x+1, self.y],[self.x, self.y-1],[self.x, self.y+1]]
         elif (self.dir == 2): # DOWN
-            possible_target_points = [[self.x+1, self.y-1],[self.x-1, self.y-1],[self.x, self.y-1]]
+            possible_target_points = [[self.x, self.y-1],[self.x-1, self.y],[self.x+1, self.y]]
         elif (self.dir == 3): # LEFT
-            possible_target_points = [[self.x-1, self.y],[self.x-1, self.y-1],[self.x-1, self.y+1]]
+            possible_target_points = [[self.x-1, self.y],[self.x, self.y-1],[self.x, self.y+1]]
         if (randint(0,100) == randint(0,100)):
             self.dir += randint(-1,1)
         self.move_hist.append([self.x, self.y])
@@ -81,11 +82,41 @@ class Ant:
             target = self.findSeekerTarger()
         return target
     def findReturnerTarget(self):
-        if (len(self.move_hist) > 0):
-            target = self.move_hist[-1]
-            self.move_hist.pop(-1)
-        else:
-            target = [self.x,self.y]
+        if self.dir >= 4:
+            self.dir = 0
+        elif self.dir <= -1:
+            self.dir = 3
+        possible_target_points = []
+        if (self.dir == 0): # UP
+            possible_target_points = [[self.x+1, self.y],[self.x-1, self.y],[self.x, self.y+1]]
+        elif (self.dir == 1): # RIGHT
+            possible_target_points = [[self.x+1, self.y],[self.x, self.y-1],[self.x, self.y+1]]
+        elif (self.dir == 2): # DOWN
+            possible_target_points = [[self.x, self.y-1],[self.x-1, self.y],[self.x+1, self.y]]
+        elif (self.dir == 3): # LEFT
+            possible_target_points = [[self.x-1, self.y],[self.x, self.y-1],[self.x, self.y+1]]
+
+        if (randint(0,100) == randint(0,100)):
+            self.dir += randint(-1,1)
+
+        target = choice(possible_target_points)
+
+        # for possible_target_point in possible_target_points:
+        #     if (checkIfFood(self, possible_target_point)):
+        #         break
+        n_tests = 0
+        while (getArrayLocation(target) <= 0 or getArrayLocation(target) > (self.envir._height*self.envir._width)-1 or checkIfFood(self, target)):
+            if (n_tests > 10):
+                target = (self.x, self.y)
+            self.dir += 2
+            target = self.findSeekerTarger()
+            n_tests += 1
+        # if (len(self.move_hist) > 0):
+        #     target = self.move_hist[-1]
+        #     self.move_hist.pop(-1)
+        # else:
+        #     target = [self.x,self.y]
+        # target = [self.envir.nest.x, self.envir.nest.y]
         return target
     def findFollowerTarget(self):
         n = 0
@@ -127,8 +158,8 @@ class Ant:
     def move(self):
         if (self.type == Ant.TYPE_SEEKER):
             target = self.findSeekerTarger()
-            if (len(self.move_hist) >= Ant.MAX_TRIP):
-                self.type = Ant.TYPE_RETURNER2
+            # if (len(self.move_hist) >= Ant.MAX_TRIP):
+            #     self.type = Ant.TYPE_RETURNER2
         elif (self.type == Ant.TYPE_RETURNER or self.type == Ant.TYPE_RETURNER2):
             target = self.findReturnerTarget()
             if (self.type == Ant.TYPE_RETURNER):
@@ -137,8 +168,8 @@ class Ant:
                 self.pheromoneDrop(self.envir.map[getArrayLocation([self.x, self.y])], dirX, dirY)
         elif (self.type == Ant.TYPE_FOLLOWER):
             target = self.findFollowerTarget()
-            if (len(self.move_hist) >= Ant.MAX_TRIP):
-                self.type = Ant.TYPE_RETURNER2
+            # if (len(self.move_hist) >= Ant.MAX_TRIP):
+            #     self.type = Ant.TYPE_RETURNER2
             # target = [self.x, self.y]
 
         if (self.x < target[0]):
@@ -151,6 +182,8 @@ class Ant:
             self.y -= 1
         
         if self.envir.map[getArrayLocation([self.x, self.y])].type == MapPoint.TYPE_NEST:
+            if (self.type == Ant.TYPE_RETURNER and self.is_carrying):
+                self.is_carrying = False
             rnd = randint(0, self.seeker_prob)
             for dx in range(-1,2):
                 for dy in range(-1,2):
@@ -162,6 +195,7 @@ class Ant:
             if (self.type != Ant.TYPE_FOLLOWER):
                 self.type = Ant.TYPE_SEEKER
         elif self.envir.map[getArrayLocation([self.x, self.y])].type == MapPoint.TYPE_FOOD:
+            self.is_carrying = True
             self.envir.map[getArrayLocation([self.x, self.y])].type = MapPoint.TYPE_EMPTY
             del self.envir.food[getArrayLocation([self.x, self.y])]
             self.type = Ant.TYPE_RETURNER

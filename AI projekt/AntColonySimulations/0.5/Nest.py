@@ -16,7 +16,7 @@ class Nest:
         self.y = relY
         self.envir = envir
         self.tiles = [] 
-        for tile in pointsInCircle([self.x, self.y], 1):
+        for tile in pointsInCircle([self.x, self.y], 3):
             self.tiles.append(pygame.Rect(tile[0], tile[1], 1, 1))
             self.envir.map[getArrayLocation([tile[0], tile[1]])].type = MapPoint.TYPE_NEST
     def display(self):
