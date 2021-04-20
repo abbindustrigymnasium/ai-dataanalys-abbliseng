@@ -89,6 +89,7 @@ class Ant:
         target = choice(possible_target_points)
         for possible_target_point in possible_target_points:
             if (checkIfFood(self, possible_target_point)):
+                target = possible_target_point
                 break
         behind = (self.x, self.y)
         if (self.dir == 0):
@@ -151,6 +152,7 @@ class Ant:
                 if (Random<=intervall[i]):
                     # print("got target")
                     target = self.envir.map[getArrayLocation(possible_target_points[i])].pos
+                    break
             if target == [0,0]:
                 target = choice(possible_target_points)
         self.move_hist.append([self.x, self.y])
