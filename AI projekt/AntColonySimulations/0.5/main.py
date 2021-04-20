@@ -14,8 +14,8 @@ pygame.init()
 
 # _width = math.floor(1280/3)
 # _height = math.floor(960/3)
-_width = math.floor(1920/10)
-_height = math.floor(1080/10)
+_width = math.floor(1920/15)
+_height = math.floor(1080/15)
 # _width = 250
 # _height = 175
 _sSize = [_width, _height]
@@ -76,28 +76,32 @@ class Environment:
         elif event.type == VIDEORESIZE:
             newWindowSize = (event.size[0], math.floor(event.size[0]*_ratio))
             self.screen = pygame.display.set_mode(newWindowSize, HWSURFACE|DOUBLEBUF|RESIZABLE)
+        elif event.type  == pygame.KEYDOWN:
+            if event.key ==  ord('q'):
+                self._running = False
+            elif event.key == ord('f'):
+                self.screen = pygame.display.set_mode((round(1920/2), round(1920/2*_ratio)))
+            elif event.key == ord('w'):
+                MapPoint.DECAY_CONSTANT += 0.002
+                print(MapPoint.DECAY_CONSTANT)
+            elif event.key == ord('s'):
+                MapPoint.DECAY_CONSTANT -= 0.002
+                print(MapPoint.DECAY_CONSTANT)
     
     def resetWindow(self):
         # self.screen.fill((78, 42, 42))
-        self.screen.fill((255, 255, 255))
-        self.fake_screen.fill((255, 255, 255))
+        # self.screen.fill((255, 255, 255))
+        # self.fake_screen.fill((255, 255, 255))
+        self.screen.fill((0, 0, 0))
+        self.fake_screen.fill((0, 0, 0))
         pass
 
     def display(self):
-        # for pheromone in self.pheromones:
-        #     value = 1-self.map[getArrayLocation(pheromone)].pheromone_concentration/MapPoint.MAX_CONCENTRATION
-            # print(value)
-            pygame.draw.circle(self.fake_screen,hsl2rgb(264, 100, 100*value), pheromone, 1)
         for food in self.food:
             self.food[food].display()
         self.nest.display()
         for ant in self.ants:
             ant.display()
-    
-    def handle_pheromones(self):
-        pass
-        # for pheromone in self.pheromones:
-        #     self.map[getArrayLocation(pheromone)].pheromoneDecay(self, pheromone)
     def handle_ants(self):
         for ant in self.ants:
             ant.move()
@@ -112,20 +116,26 @@ class Environment:
 
 overlord = Environment(_width, _height, 100)
 
+# Corner food
+for x in range(10,25):
+    for y in range(10,20):
+        # overlord.food[getArrayLocation((x,y))] = Food(overlord, (x,y))
+        # overlord.food[getArrayLocation((_width-x,y))] = Food(overlord, (_width-x,y))
+        # overlord.food[getArrayLocation((x,_height-y))] = Food(overlord, (x,_height-y))
+        overlord.food[getArrayLocation((_width-x,_height-y))] = Food(overlord, (_width-x,_height-y))
+
 while overlord._running:
     overlord.resetWindow()
 
     for event in pygame.event.get():
         overlord.handle_event(event)
 
-    overlord.handle_pheromones()
-    for tile in overlord.map:
-        # pygame.draw.rect(overlord.fake_screen, (0,0,0), tile.object)
-        tile.pheromoneDecay()
-    # for tile in overlord.map:
-    #     pygame.draw.rect(overlord.fake_screen, (255,255,255), tile.object)
-        # overlord.Clock.tick(1)
     overlord.handle_ants()
+    for tile in overlord.map:
+        tile.pheromoneDecay()
+        # value = 1-tile.pheromone_concentration/MapPoint.MAX_CONCENTRATION
+        value = tile.pheromone_concentration/MapPoint.MAX_CONCENTRATION
+        pygame.draw.circle(overlord.fake_screen,hsl2rgb(264, 100, 100*value), tile.pos, 1)
     overlord.display()
     overlord.screen.blit(pygame.transform.scale(overlord.fake_screen, overlord.screen.get_rect().size), (0,0))
     

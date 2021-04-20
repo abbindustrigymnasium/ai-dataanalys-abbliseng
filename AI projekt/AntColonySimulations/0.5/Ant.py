@@ -2,6 +2,10 @@ from Utils import pointsInCircle, fromArrayLocation, getArrayLocation, hsl2rgb, 
 from random import random, randint, randrange, choice
 from MapPoint import MapPoint
 import pygame
+import  math
+
+_width = math.floor(1920/15)
+_height = math.floor(1080/15)
 
 class Ant:
 
@@ -37,7 +41,13 @@ class Ant:
         self.follower_to_seeker = self.ph_increase/10
         self.seeker_prob = round(MapPoint.MAX_CONCENTRATION+MapPoint.MAX_CONCENTRATION*0.05)
     def display(self):
-        pygame.draw.rect(self.envir.fake_screen, (0, 0, 0), self.object)
+        if (self.type == Ant.TYPE_RETURNER):
+            pygame.draw.rect(self.envir.fake_screen, (47, 168, 47), self.object)
+        elif (self.type == Ant.TYPE_FOLLOWER):
+            pygame.draw.rect(self.envir.fake_screen, (235, 147, 52), self.object)
+        else:
+            # pygame.draw.rect(self.envir.fake_screen, (0, 0, 0), self.object)
+            pygame.draw.rect(self.envir.fake_screen, (255, 255, 255), self.object)
     def pheromoneDrop(self, mapPoint, dirX, dirY):
         if (Ant.MAX_TRIP-len(self.move_hist) < Ant.PH_FOOD_MULTIPLIER_LENGTH):
             ph_inc = self.ph_increase * Ant.PH_FOOD_MULTIPLIER
@@ -46,7 +56,7 @@ class Ant:
             ph_inc = self.ph_increase
             ph_inc_side = self.ph_increase/Ant.SIDE_DROP
         mapPoint.pheromoneIncrease(ph_inc)
-        self.envir.pheromones.append((self.x, self.y))
+        # self.envir.pheromones.append((self.x, self.y))
         if (abs(dirX) <= 1 and abs(dirY) <= 1):
             for i in range(-1,2):
                 for j in range(-1,2):
@@ -55,7 +65,7 @@ class Ant:
                     if (getArrayLocation([self.x+i,self.y+j]) < 0 or getArrayLocation([self.x+i,self.y+j]) > self.envir._width*self.envir._height-1):
                         continue
                     self.envir.map[getArrayLocation([self.x+i,self.y+j])].pheromoneIncrease(ph_inc_side)
-                    self.envir.pheromones.append((self.x+i, self.y+j))
+                    # self.envir.pheromones.append((self.x+i, self.y+j))
     def findSeekerTarger(self):
         if self.dir >= 4:
             self.dir = 0
@@ -77,40 +87,24 @@ class Ant:
         for possible_target_point in possible_target_points:
             if (checkIfFood(self, possible_target_point)):
                 break
+
+        if (self.dir == 0):
+            behind = (self.x, self.y+1)
+        elif (self.dir == 1):
+            behind = (self.x-1, self.y)
+        elif (self.dir == 2):
+            behind = (self.x, self.y-1)
+        elif (self.dir == 3):
+            behind = (self.x+1, self.y)
+        
+        if (checkIfFood(self, behind)).
+            target = behind
+
         while (getArrayLocation(target) <= 0 or getArrayLocation(target) > (self.envir._height*self.envir._width)-1):
             self.dir += 2
             target = self.findSeekerTarger()
         return target
     def findReturnerTarget(self):
-        # if self.dir >= 4:
-        #     self.dir = 0
-        # elif self.dir <= -1:
-        #     self.dir = 3
-        # possible_target_points = []
-        # if (self.dir == 0): # UP
-        #     possible_target_points = [[self.x+1, self.y],[self.x-1, self.y],[self.x, self.y+1]]
-        # elif (self.dir == 1): # RIGHT
-        #     possible_target_points = [[self.x+1, self.y],[self.x, self.y-1],[self.x, self.y+1]]
-        # elif (self.dir == 2): # DOWN
-        #     possible_target_points = [[self.x, self.y-1],[self.x-1, self.y],[self.x+1, self.y]]
-        # elif (self.dir == 3): # LEFT
-        #     possible_target_points = [[self.x-1, self.y],[self.x, self.y-1],[self.x, self.y+1]]
-
-        # if (randint(0,100) == randint(0,100)):
-        #     self.dir += randint(-1,1)
-
-        # target = choice(possible_target_points)
-
-        # # for possible_target_point in possible_target_points:
-        # #     if (checkIfFood(self, possible_target_point)):
-        # #         break
-        # n_tests = 0
-        # while (getArrayLocation(target) <= 0 or getArrayLocation(target) > (self.envir._height*self.envir._width)-1 or checkIfFood(self, target)):
-        #     if (n_tests > 10):
-        #         target = (self.x, self.y)
-        #     self.dir += 2
-        #     target = self.findSeekerTarger()
-        #     n_tests += 1
         if (len(self.move_hist) > 0):
             target = self.move_hist[-1]
             self.move_hist.pop(-1)
@@ -124,7 +118,7 @@ class Ant:
         norm = 0
         possible_target_points = []
         intervall = []
-        Random = randint(0,101)
+        Random = random()
         target = [0,0]
         for dx in range(-1,2):
             for dy in range(-1,2):
@@ -136,6 +130,8 @@ class Ant:
             for dy in range(-1,2):
                 if (dx == 0 and dy == 0):
                     continue
+                if (getArrayLocation([self.x+dx, self.y+dy]) < 0 or getArrayLocation([self.x+dx, self.y+dy]) > _width*_height-1):
+                    continue
                 if (self.envir.hiveDist(self.x, self.y)<=self.envir.hiveDist(self.x+dx, self.y+dy) and self.envir.map[getArrayLocation([self.x+dx, self.y+dy])].pheromone_concentration > 0 and getArrayLocation([self.x+dx, self.y+dy])>0 and getArrayLocation([self.x+dx, self.y+dy])<self.envir._width*self.envir._height-1):
                     possible_target_points.append([self.x+dx, self.y+dy])
                     phSum += self.envir.map[getArrayLocation([self.x+dx, self.y+dy])].pheromone_concentration**2
@@ -144,13 +140,16 @@ class Ant:
         if (phSum<self.follower_to_seeker or n==0):
             self.type = Ant.TYPE_SEEKER
         else:
-            # print(possible_target_points[0][0])
             intervall.append((self.envir.map[getArrayLocation(possible_target_points[0])].pheromone_concentration*(100/norm)*self.envir.hiveDist(possible_target_points[0][0],possible_target_points[0][1]))**2)
             for i in range(1, n):
                 intervall.append(intervall[i-1]+(self.envir.map[getArrayLocation(possible_target_points[i])].pheromone_concentration*(100/norm)*self.envir.hiveDist(possible_target_points[i][0],possible_target_points[i][1]))**2)
             for i in range(n):
+                # print(Random, intervall[i])q
                 if (Random<=intervall[i]):
+                    # print("got target")
                     target = self.envir.map[getArrayLocation(possible_target_points[i])].pos
+            if target == [0,0]:
+                target = choice(possible_target_points)
         self.move_hist.append([self.x, self.y])
         return target
 
@@ -194,7 +193,7 @@ class Ant:
                         break
             if (self.type != Ant.TYPE_FOLLOWER):
                 self.type = Ant.TYPE_SEEKER
-        elif self.envir.map[getArrayLocation([self.x, self.y])].type == MapPoint.TYPE_FOOD:
+        elif self.envir.map[getArrayLocation([self.x, self.y])].type == MapPoint.TYPE_FOOD and self.type != Ant.TYPE_RETURNER:
             self.is_carrying = True
             self.envir.map[getArrayLocation([self.x, self.y])].type = MapPoint.TYPE_EMPTY
             del self.envir.food[getArrayLocation([self.x, self.y])]
