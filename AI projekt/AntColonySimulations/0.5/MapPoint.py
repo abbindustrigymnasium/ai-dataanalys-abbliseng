@@ -1,3 +1,4 @@
+import pygame
 class MapPoint:
 
     TYPE_EMPTY = 0
@@ -12,12 +13,13 @@ class MapPoint:
         self.pos = position
         self.decay_constant = 0.006
         self.pheromone_concentration = 0
+        self.object = pygame.Rect(self.pos[0], self.pos[1], 1, 1)
 
-    def pheromoneDecay(self, envir, pos):
+    def pheromoneDecay(self, envir=None, pos=None):
         self.pheromone_concentration = (1-self.decay_constant)*self.pheromone_concentration
-        if (self.pheromone_concentration <= 0.01):
-            i = envir.pheromones.index(pos)
-            envir.pheromones.pop(i)
+        # if (self.pheromone_concentration <= 0.0001):
+        #     i = envir.pheromones.index(pos)
+        #     envir.pheromones.pop(i)
             
     def pheromoneIncrease(self, val):
         if (self.type != MapPoint.TYPE_OBSTACLE):

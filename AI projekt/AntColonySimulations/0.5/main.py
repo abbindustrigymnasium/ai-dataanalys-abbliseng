@@ -14,8 +14,10 @@ pygame.init()
 
 # _width = math.floor(1280/3)
 # _height = math.floor(960/3)
-_width = math.floor(1920/15)
-_height = math.floor(1080/15)
+_width = math.floor(1920/10)
+_height = math.floor(1080/10)
+# _width = 250
+# _height = 175
 _sSize = [_width, _height]
 _ratio = _height/_width
 relX = math.floor(_width/2)
@@ -29,6 +31,8 @@ class Environment:
         self._running = True
         self.screen = pygame.display.set_mode((width, height), HWSURFACE|DOUBLEBUF|RESIZABLE)
         self.fake_screen = self.screen.copy()
+        # self.screen = pygame.display.set_mode((width*4, height*4), HWSURFACE|DOUBLEBUF|RESIZABLE)
+
 
         self.map = []
         for i in range(self._width*self._height):
@@ -36,10 +40,11 @@ class Environment:
         ##
         self.nest = Nest(self)
         self.food = {}
-        self.pheromones = []
-        self.pheromones_to_clear = []
+        # self.pheromones = []
+        # self.pheromones_to_clear = []
         self.ants = []
         ##
+        self.Clock = pygame.time.Clock()
 
         for i in range(number_of_ants):
             self.ants.append(Ant(self, self.nest, Ant.TYPE_SEEKER))
@@ -79,8 +84,8 @@ class Environment:
         pass
 
     def display(self):
-        for pheromone in self.pheromones:
-            value = 1-self.map[getArrayLocation(pheromone)].pheromone_concentration/MapPoint.MAX_CONCENTRATION
+        # for pheromone in self.pheromones:
+        #     value = 1-self.map[getArrayLocation(pheromone)].pheromone_concentration/MapPoint.MAX_CONCENTRATION
             # print(value)
             pygame.draw.circle(self.fake_screen,hsl2rgb(264, 100, 100*value), pheromone, 1)
         for food in self.food:
@@ -90,8 +95,9 @@ class Environment:
             ant.display()
     
     def handle_pheromones(self):
-        for pheromone in self.pheromones:
-            self.map[getArrayLocation(pheromone)].pheromoneDecay(self, pheromone)
+        pass
+        # for pheromone in self.pheromones:
+        #     self.map[getArrayLocation(pheromone)].pheromoneDecay(self, pheromone)
     def handle_ants(self):
         for ant in self.ants:
             ant.move()
@@ -113,6 +119,12 @@ while overlord._running:
         overlord.handle_event(event)
 
     overlord.handle_pheromones()
+    for tile in overlord.map:
+        # pygame.draw.rect(overlord.fake_screen, (0,0,0), tile.object)
+        tile.pheromoneDecay()
+    # for tile in overlord.map:
+    #     pygame.draw.rect(overlord.fake_screen, (255,255,255), tile.object)
+        # overlord.Clock.tick(1)
     overlord.handle_ants()
     overlord.display()
     overlord.screen.blit(pygame.transform.scale(overlord.fake_screen, overlord.screen.get_rect().size), (0,0))
