@@ -199,7 +199,10 @@ class Ant:
         elif self.envir.map[getArrayLocation([self.x, self.y])].type == MapPoint.TYPE_FOOD and self.type != Ant.TYPE_RETURNER:
             self.is_carrying = True
             self.envir.map[getArrayLocation([self.x, self.y])].type = MapPoint.TYPE_EMPTY
-            del self.envir.food[getArrayLocation([self.x, self.y])]
+            try:
+                del self.envir.food[getArrayLocation([self.x, self.y])]
+            except KeyError:
+                pass
             self.type = Ant.TYPE_RETURNER
 
         if (self.type == Ant.TYPE_SEEKER or self.type == Ant.TYPE_FOLLOWER):
