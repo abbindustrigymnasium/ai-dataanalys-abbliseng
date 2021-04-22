@@ -1,4 +1,0 @@
-https://github.com/Andarin/Ant-Colony-Simulation-Python/tree/master/Ant_Simulation_7
-https://itp.uni-frankfurt.de/~gros/StudentProjects/Applets_2014_AntsSimulation/ants.htm
-https://softologyblog.wordpress.com/2020/03/21/ant-colony-simulations/
-https://www.rose-hulman.edu/class/cs/csse453/schedule/day40/AntColonySim.pdf
