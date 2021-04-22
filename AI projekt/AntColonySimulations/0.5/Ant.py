@@ -160,6 +160,7 @@ class Ant:
 
 
     def move(self):
+        # print("Starting!")
         if (self.type == Ant.TYPE_SEEKER):
             target = self.findSeekerTarger()
             if (len(self.move_hist) >= Ant.MAX_TRIP):
@@ -213,3 +214,4 @@ class Ant:
 
         self.object.x = self.x
         self.object.y = self.y
+        # print("Moved!")

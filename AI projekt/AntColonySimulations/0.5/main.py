@@ -36,7 +36,7 @@ class Environment:
 
         self.map = []
         for i in range(self._width*self._height):
-            self.map.append(MapPoint(fromArrayLocation(i),MapPoint.TYPE_EMPTY))
+            self.map.append(MapPoint(fromArrayLocation(i),MapPoint.TYPE_EMPTY, self))
         ##
         self.nest = Nest(self)
         self.food = {}
@@ -97,13 +97,24 @@ class Environment:
         pass
 
     def display(self):
-        for food in self.food:
-            self.food[food].display()
-        self.nest.display()
+        for tile in self.map:
+            tile.display()
+            # tile.pheromoneDecay()
+            # value = 1-tile.pheromone_concentration/MapPoint.MAX_CONCENTRATION
+            # value = tile.pheromone_concentration/MapPoint.MAX_CONCENTRATION
+            # pygame.draw.circle(self.fake_screen,hsl2rgb(264, 100, 100*value), tile.pos, 1)
+            # if tile.type == MapPoint.TYPE_NEST:
+
+        # for food in self.food:
+        #     self.food[food].display()
+        # self.nest.display()
         for ant in self.ants:
             ant.display()
+    
     def handle_ants(self):
         for ant in self.ants:
+            # x = threading.Thread(target=ant.move())
+            # x.start()
             ant.move()
     
     def hiveDist(self, x, y):
@@ -120,7 +131,7 @@ overlord.ants.append(Ant(overlord, overlord.nest, Ant.TYPE_SEEKER, "My"))
 # Corner food
 for x in range(10,25):
     for y in range(10,20):
-        # overlord.food[getArrayLocation((x,y))] = Food(overlord, (x,y))
+        overlord.food[getArrayLocation((x,y))] = Food(overlord, (x,y))
         # overlord.food[getArrayLocation((_width-x,y))] = Food(overlord, (_width-x,y))
         # overlord.food[getArrayLocation((x,_height-y))] = Food(overlord, (x,_height-y))
         overlord.food[getArrayLocation((_width-x,_height-y))] = Food(overlord, (_width-x,_height-y))
@@ -132,11 +143,6 @@ while overlord._running:
         overlord.handle_event(event)
 
     overlord.handle_ants()
-    for tile in overlord.map:
-        tile.pheromoneDecay()
-        # value = 1-tile.pheromone_concentration/MapPoint.MAX_CONCENTRATION
-        value = tile.pheromone_concentration/MapPoint.MAX_CONCENTRATION
-        pygame.draw.circle(overlord.fake_screen,hsl2rgb(264, 100, 100*value), tile.pos, 1)
     overlord.display()
     overlord.screen.blit(pygame.transform.scale(overlord.fake_screen, overlord.screen.get_rect().size), (0,0))
     
