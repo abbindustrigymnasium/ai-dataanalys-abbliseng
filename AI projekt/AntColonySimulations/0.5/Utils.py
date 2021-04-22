@@ -6,7 +6,21 @@ _height = math.floor(1080/15)
 _sSize = [_width, _height]
 _ratio = _height/_width
 relX = math.floor(_width/2)
+_ratio = _height/_width
 relY = math.floor(_height/2)
+
+def getWidth():
+    return _width
+def getHeight():
+    return _height
+def getsSize():
+    return _sSize
+def getRelX():
+    return relX
+def getRelY():
+    return relY
+def getRatio():
+    return _ratio
 
 def pointsInCircle(location, radius):
     points = []
@@ -57,9 +71,6 @@ def hsl2rgb(h, s, l):
     g = round((g+m)*255)
     b = round((b+m)*255)
     return((r,g,b))
-
-def debugDraw(pos):
-    pygame.draw.circle(overlord.fake_screen, (0, 255, 0), (pos[0], pos[1]), 1)
 
 def checkIfFood(self, possible_target_point):
     if (getArrayLocation(possible_target_point) < 0 or getArrayLocation(possible_target_point) > (self.envir._height*self.envir._width)-1):

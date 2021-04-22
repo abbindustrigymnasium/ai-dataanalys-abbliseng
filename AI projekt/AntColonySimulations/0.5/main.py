@@ -8,20 +8,9 @@ from Nest import Nest
 from Ant import Ant
 from Food import Food
 from MapPoint import MapPoint
-from Utils import pointsInCircle, fromArrayLocation, getArrayLocation, hsl2rgb, debugDraw, checkIfFood
+from Utils import *
 
 pygame.init()
-
-# _width = math.floor(1280/3)
-# _height = math.floor(960/3)
-_width = math.floor(1920/15)
-_height = math.floor(1080/15)
-# _width = 250
-# _height = 175
-_sSize = [_width, _height]
-_ratio = _height/_width
-relX = math.floor(_width/2)
-relY = math.floor(_height/2)
 
 class Environment:
     def __init__(self, width, height, number_of_ants):
@@ -74,13 +63,13 @@ class Environment:
             for point in foodPoints:
                 overlord.food[getArrayLocation(point)] = Food(self, point)
         elif event.type == VIDEORESIZE:
-            newWindowSize = (event.size[0], math.floor(event.size[0]*_ratio))
+            newWindowSize = (event.size[0], math.floor(event.size[0]*getRatio()))
             self.screen = pygame.display.set_mode(newWindowSize, HWSURFACE|DOUBLEBUF|RESIZABLE)
         elif event.type  == pygame.KEYDOWN:
             if event.key ==  ord('q'):
                 self._running = False
             elif event.key == ord('f'):
-                self.screen = pygame.display.set_mode((round(1920/2), round(1920/2*_ratio)))
+                self.screen = pygame.display.set_mode((round(1920/2), round(1920/2*getRatio())))
             elif event.key == ord('w'):
                 MapPoint.DECAY_CONSTANT += 0.002
                 print(MapPoint.DECAY_CONSTANT)
@@ -99,15 +88,6 @@ class Environment:
     def display(self):
         for tile in self.map:
             tile.display()
-            # tile.pheromoneDecay()
-            # value = 1-tile.pheromone_concentration/MapPoint.MAX_CONCENTRATION
-            # value = tile.pheromone_concentration/MapPoint.MAX_CONCENTRATION
-            # pygame.draw.circle(self.fake_screen,hsl2rgb(264, 100, 100*value), tile.pos, 1)
-            # if tile.type == MapPoint.TYPE_NEST:
-
-        # for food in self.food:
-        #     self.food[food].display()
-        # self.nest.display()
         for ant in self.ants:
             ant.display()
     
@@ -125,7 +105,7 @@ class Environment:
         return 0.0
 
 
-overlord = Environment(_width, _height, 100)
+overlord = Environment(getWidth(), getHeight(), 100)
 overlord.ants.append(Ant(overlord, overlord.nest, Ant.TYPE_SEEKER, "My"))
 
 # Corner food
@@ -134,7 +114,7 @@ for x in range(10,25):
         overlord.food[getArrayLocation((x,y))] = Food(overlord, (x,y))
         # overlord.food[getArrayLocation((_width-x,y))] = Food(overlord, (_width-x,y))
         # overlord.food[getArrayLocation((x,_height-y))] = Food(overlord, (x,_height-y))
-        overlord.food[getArrayLocation((_width-x,_height-y))] = Food(overlord, (_width-x,_height-y))
+        overlord.food[getArrayLocation((getWidth()-x,getHeight()-y))] = Food(overlord, (getWidth()-x,getHeight()-y))
 
 while overlord._running:
     overlord.resetWindow()

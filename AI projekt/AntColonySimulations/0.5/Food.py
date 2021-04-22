@@ -1,4 +1,4 @@
-from Utils import pointsInCircle, fromArrayLocation, getArrayLocation, hsl2rgb, debugDraw, checkIfFood
+from Utils import *
 import pygame
 from MapPoint import MapPoint
 
