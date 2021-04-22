@@ -69,10 +69,10 @@ class Ant:
                     self.envir.map[getArrayLocation([self.x+i,self.y+j])].pheromoneIncrease(ph_inc_side)
                     # self.envir.pheromones.append((self.x+i, self.y+j))
 
-    def checkForSurrondingFood(self):
+    def checkForSurrondingFood(self, tier=0):
         # Might be better to append points to list and then randomize so if multiple choices it is random
-        for dx in range(-1,2):
-            for dy in range(-1,2):
+        for dx in range(-1-tier,2+tier):
+            for dy in range(-1-tier,2+tier):
                 p = [self.x+dx, self.y+dy]
                 if ((dx == 0 and dy == 0)):
                     continue
@@ -153,10 +153,14 @@ class Ant:
                 surrounding_points[3]
             ]
 
-        if (randint(0,100) == randint(0,100)):
-            self.dir += randint(-1,1)
+        # if (randint(0,100) == randint(0,100)):
+        #     self.dir += randint(-1,1)
         # Randomly select a target from possible points
         target = choice(possible_target_points)
+        if (target == possible_target_points[0]):
+            self.dir -= 1
+        elif (target == possible_target_points[2]):
+            self.dir += 1
         # Append current pos to move history
         self.move_hist.append([self.x, self.y])
         return target
@@ -177,12 +181,16 @@ class Ant:
         Random = random()
         target = [0,0]
         # Check if any of surronding has food
-        for dx in range(-1,2):
-            for dy in range(-1,2):
-                if (dx == 0 and dy == 0):
-                    continue
-                if (checkIfFood(self, [self.x+dx, self.y+dy])):
-                    return [self.x+dx, self.y+dy]
+        # for dx in range(-1,2):
+        #     for dy in range(-1,2):
+        #         if (dx == 0 and dy == 0):
+        #             continue
+        #         if (checkIfFood(self, [self.x+dx, self.y+dy])):
+        #             return [self.x+dx, self.y+dy]
+        possible_target = self.checkForSurrondingFood(1)
+        if (possible_target and possible_target != "EDGE"):
+            self.move_hist.append([self.x, self.y])
+            return possible_target
         # Get possible targets with a pheromone concentration over 1
         for dx in range(-1,2):
             for dy in range(-1,2):
@@ -251,7 +259,7 @@ class Ant:
                     if (dx == 0 and dy == 0):
                         continue
                     # print(round(self.envir.map[getArrayLocation([self.x+dx, self.y+dy])].pheromone_concentration),":",rnd,":",round(self.envir.map[getArrayLocation([self.x+dx, self.y+dy])].pheromone_concentration) > rnd)
-                    if (round(self.envir.map[getArrayLocation([self.x+dx, self.y+dy])].pheromone_concentration) > rnd):
+                    if (round(self.envir.map[getArrayLocation([self.x+dx, self.y+dy])].pheromone_concentration) > rnd/2):
                         self.type = Ant.TYPE_FOLLOWER
                         break
             # Otherwise become a seeker
