@@ -38,30 +38,32 @@ class MapPoint:
     MAX_CONCENTRATION = 100.0
     DECAY_CONSTANT = 0.006
 
+    SEEKER_SWAY = MAX_CONCENTRATION*0.75
+
     def __init__(self, position, t, envir):
         self.type = t
         self.pos = position
         self.pheromone_concentration = 0
         self.object = pygame.Rect(self.pos[0], self.pos[1], 1, 1)
         self.envir = envir
+        self.DECAY_CONSTANT = MapPoint.DECAY_CONSTANT
 
     def pheromoneDecay(self, envir=None, pos=None):
-        self.pheromone_concentration = (1-MapPoint.DECAY_CONSTANT)*self.pheromone_concentration
+        self.pheromone_concentration = (1-self.DECAY_CONSTANT)*self.pheromone_concentration
         if (self.pheromone_concentration <= 0.0000001):
             self.pheromone_concentration = 0
+            self.DECAY_CONSTANT = MapPoint.DECAY_CONSTANT
             
     def pheromoneIncrease(self, val):
         if (self.type != MapPoint.TYPE_OBSTACLE):
+            self.DECAY_CONSTANT = MapPoint.DECAY_CONSTANT
             self.pheromone_concentration += val
             if (self.pheromone_concentration > MapPoint.MAX_CONCENTRATION):
                 self.pheromone_concentration = MapPoint.MAX_CONCENTRATION
     
     def display(self):
         self.pheromoneDecay()
-            # tile.pheromoneDecay()
-            # value = 1-tile.pheromone_concentration/MapPoint.MAX_CONCENTRATION
-            # value = tile.pheromone_concentration/MapPoint.MAX_CONCENTRATION
-            # pygame.draw.circle(self.fake_screen,hsl2rgb(264, 100, 100*value), tile.pos, 1)
+
         if (self.type == MapPoint.TYPE_NEST):
             pygame.draw.rect(self.envir.fake_screen, (255,0,0), self.object)
         elif (self.type == MapPoint.TYPE_FOOD):

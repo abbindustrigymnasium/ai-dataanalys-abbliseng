@@ -105,16 +105,16 @@ class Environment:
         return 0.0
 
 
-overlord = Environment(getWidth(), getHeight(), 100)
+overlord = Environment(getWidth(), getHeight(), 500)
 overlord.ants.append(Ant(overlord, overlord.nest, Ant.TYPE_SEEKER, "My")) # Myran My
 
 # Corner food
-for x in range(10,25):
-    for y in range(10,20):
-        overlord.food[getArrayLocation((x,y))] = Food(overlord, (x,y))
-        # overlord.food[getArrayLocation((_width-x,y))] = Food(overlord, (_width-x,y))
-        # overlord.food[getArrayLocation((x,_height-y))] = Food(overlord, (x,_height-y))
-        overlord.food[getArrayLocation((getWidth()-x,getHeight()-y))] = Food(overlord, (getWidth()-x,getHeight()-y))
+# for x in range(10,25):
+#     for y in range(10,20):
+#         overlord.food[getArrayLocation((x,y))] = Food(overlord, (x,y))
+#         # overlord.food[getArrayLocation((_width-x,y))] = Food(overlord, (_width-x,y))
+#         # overlord.food[getArrayLocation((x,_height-y))] = Food(overlord, (x,_height-y))
+#         overlord.food[getArrayLocation((getWidth()-x,getHeight()-y))] = Food(overlord, (getWidth()-x,getHeight()-y))
 
 while overlord._running:
     overlord.resetWindow()
