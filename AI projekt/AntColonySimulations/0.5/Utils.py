@@ -4,8 +4,8 @@ from MapPoint import MapPoint
 # _width = math.floor(1920/15)
 # _height = math.floor(1080/15)
 
-_width = math.floor(100)
-_height = math.floor(100)
+_width = math.floor(150)
+_height = math.floor(150)
 
 _sSize = [_width, _height]
 _ratio = _height/_width

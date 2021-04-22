@@ -69,7 +69,7 @@ class Environment:
             if event.key ==  ord('q'):
                 self._running = False
             elif event.key == ord('f'):
-                self.screen = pygame.display.set_mode((round(1920/2), round(1920/2*getRatio())))
+                self.screen = pygame.display.set_mode((1000,math.floor(1000*getRatio())))
             elif event.key == ord('w'):
                 MapPoint.DECAY_CONSTANT += 0.002
                 print(MapPoint.DECAY_CONSTANT)
@@ -106,7 +106,7 @@ class Environment:
 
 
 overlord = Environment(getWidth(), getHeight(), 100)
-overlord.ants.append(Ant(overlord, overlord.nest, Ant.TYPE_SEEKER, "My"))
+overlord.ants.append(Ant(overlord, overlord.nest, Ant.TYPE_SEEKER, "My")) # Myran My
 
 # Corner food
 for x in range(10,25):
@@ -124,6 +124,8 @@ while overlord._running:
 
     overlord.handle_ants()
     overlord.display()
+    
+    # print(overlord.fake_screen.get_rect().size)
     overlord.screen.blit(pygame.transform.scale(overlord.fake_screen, overlord.screen.get_rect().size), (0,0))
     
     pygame.display.flip()
