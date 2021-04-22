@@ -1,8 +1,12 @@
 import math
 from MapPoint import MapPoint
 
-_width = math.floor(1920/15)
-_height = math.floor(1080/15)
+# _width = math.floor(1920/15)
+# _height = math.floor(1080/15)
+
+_width = math.floor(250)
+_height = math.floor(250)
+
 _sSize = [_width, _height]
 _ratio = _height/_width
 relX = math.floor(_width/2)

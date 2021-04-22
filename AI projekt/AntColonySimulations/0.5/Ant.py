@@ -28,7 +28,7 @@ class Ant:
         self.y = nest.y
         self.type = t
         self.move_hist = []
-        self.dir = randint(0,3) # 0-3
+        self.dir = randint(0,7) # 0-7
         self.envir = envir
         self.object = pygame.Rect(self.x, self.y, 1, 1)
         self.viewdist = 5
@@ -38,6 +38,7 @@ class Ant:
         self.ph_increase = Ant.STD_PH_DROP
         self.follower_to_seeker = self.ph_increase/10
         self.seeker_prob = round(MapPoint.MAX_CONCENTRATION+MapPoint.MAX_CONCENTRATION*0.05)
+
     def display(self):
         if (self.id != None):
             pygame.draw.rect(self.envir.fake_screen, (201, 42, 42), self.object)
@@ -68,48 +69,94 @@ class Ant:
                     self.envir.map[getArrayLocation([self.x+i,self.y+j])].pheromoneIncrease(ph_inc_side)
                     # self.envir.pheromones.append((self.x+i, self.y+j))
 
+    def checkForSurrondingFood(self):
+        # Might be better to append points to list and then randomize so if multiple choices it is random
+        for dx in range(-1,2):
+            for dy in range(-1,2):
+                p = [self.x+dx, self.y+dy]
+                if ((dx == 0 and dy == 0)):
+                    continue
+                elif ((getArrayLocation(p) < 0 or getArrayLocation(p) > getWidth()*getHeight()-1)):
+                    return "EDGE"
+                if (checkIfFood(self, p)):
+                    return p
+        return False
+
     def findSeekerTarger(self):
+        target = self.checkForSurrondingFood()
+        if (target == "EDGE"):
+            self.type = Ant.TYPE_RETURNER2
+            return [self.x, self.y]
+        elif (target):
+            self.move_hist.append([self.x, self.y])
+            return target
         # Correct directions
-        if self.dir >= 4:
+        if self.dir >= 8:
             self.dir = 0
         elif self.dir <= -1:
-            self.dir = 3
+            self.dir = 7
         # Get possible targets depending on direction
         possible_target_points = []
+        surrounding_points = []
+        for dx in range(-1,2):
+            for dy in range(-1,2):
+                p = [self.x+dx, self.y+dy]
+                if ((dx == 0 and dy == 0) or (getArrayLocation(p) < 0 or getArrayLocation(p) > getWidth()*getHeight()-1)):
+                    continue
+                surrounding_points.append(p)
         if (self.dir == 0): # UP
-            possible_target_points = [[self.x+1, self.y],[self.x-1, self.y],[self.x, self.y+1]]
-        elif (self.dir == 1): # RIGHT
-            possible_target_points = [[self.x+1, self.y],[self.x, self.y-1],[self.x, self.y+1]]
-        elif (self.dir == 2): # DOWN
-            possible_target_points = [[self.x, self.y-1],[self.x-1, self.y],[self.x+1, self.y]]
-        elif (self.dir == 3): # LEFT
-            possible_target_points = [[self.x-1, self.y],[self.x, self.y-1],[self.x, self.y+1]]
+            possible_target_points = [
+                surrounding_points[0],
+                surrounding_points[3],
+                surrounding_points[5]
+            ]
+        elif (self.dir == 1): # UP-RIGHT
+            possible_target_points = [
+                surrounding_points[3],
+                surrounding_points[5],
+                surrounding_points[6]
+            ]
+        elif (self.dir == 2): # RIGHT
+            possible_target_points = [
+                surrounding_points[5],
+                surrounding_points[6],
+                surrounding_points[7]
+            ]
+        elif (self.dir == 3): # DOWN-RIGHT
+            possible_target_points = [
+                surrounding_points[6],
+                surrounding_points[7],
+                surrounding_points[4]
+            ]
+        elif (self.dir == 4): # DOWN
+            possible_target_points = [
+                surrounding_points[7],
+                surrounding_points[4],
+                surrounding_points[2]
+            ]
+        elif (self.dir == 5): # DOWN-LEFT
+            possible_target_points = [
+                surrounding_points[4],
+                surrounding_points[2],
+                surrounding_points[1]
+            ]
+        elif (self.dir == 6): # LEFT
+            possible_target_points = [
+                surrounding_points[2],
+                surrounding_points[1],
+                surrounding_points[0]
+            ]
+        elif (self.dir == 7): # UP-LEFT
+            possible_target_points = [
+                surrounding_points[1],
+                surrounding_points[0],
+                surrounding_points[3]
+            ]
 
         if (randint(0,100) == randint(0,100)):
             self.dir += randint(-1,1)
         # Randomly select a target from possible points
         target = choice(possible_target_points)
-        # If another tile is food, override and select that as target
-        for possible_target_point in possible_target_points:
-            if (checkIfFood(self, possible_target_point)):
-                target = possible_target_point
-                break
-        # Check if there is food behind you too
-        behind = (self.x, self.y)
-        if (self.dir == 0):
-            behind = (self.x, self.y+1)
-        elif (self.dir == 1):
-            behind = (self.x-1, self.y)
-        elif (self.dir == 2):
-            behind = (self.x, self.y-1)
-        elif (self.dir == 3):
-            behind = (self.x+1, self.y)
-        if (checkIfFood(self, behind)):
-            target = behind
-        # Check if the target is a valid tile (not offscreen)
-        while (getArrayLocation(target) <= 0 or getArrayLocation(target) > (self.envir._height*self.envir._width)-1):
-            self.dir += 2
-            target = self.findSeekerTarger()
         # Append current pos to move history
         self.move_hist.append([self.x, self.y])
         return target
