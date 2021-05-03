@@ -205,6 +205,7 @@ class Ant:
         intervall = []
         Random = random()
         target = [0,0]
+
         # Check for food in surrounding (one extra view dist)
         possible_target = self.checkForSurrondingFood(1)
         if (possible_target and possible_target != "EDGE"):
@@ -223,19 +224,20 @@ class Ant:
                     norm += (self.envir.map[getArrayLocation([self.x+dx, self.y+dy])].pheromone_concentration*self.envir.hiveDist(self.x+dx, self.y+dy))**2
                     n += 1
         # If no possible targets switch to seeker type
-        if (n == 0):
-            for dx in range(-1,2):
-                for dy in range(-1,2):
-                    if ((dx == 0 and dy == 0) or getArrayLocation([self.x+dx, self.y+dy]) < 0 or getArrayLocation([self.x+dx, self.y+dy]) > getWidth()*getHeight()-1):
-                        continue
-                    # Check if further from the nest and if has pheromone > 1
-                    if (self.envir.map[getArrayLocation([self.x+dx, self.y+dy])].pheromone_concentration > 0):
-                        possible_target_points.append([self.x+dx, self.y+dy])
-                        phSum += self.envir.map[getArrayLocation([self.x+dx, self.y+dy])].pheromone_concentration**2
-                        norm += (self.envir.map[getArrayLocation([self.x+dx, self.y+dy])].pheromone_concentration*self.envir.hiveDist(self.x+dx, self.y+dy))**2
-                        n += 1
+        # if (n == 0):
+        #     for dx in range(-1,2):
+        #         for dy in range(-1,2):
+        #             if ((dx == 0 and dy == 0) or getArrayLocation([self.x+dx, self.y+dy]) < 0 or getArrayLocation([self.x+dx, self.y+dy]) > getWidth()*getHeight()-1):
+        #                 continue
+        #             # Check if closer from the nest and if has pheromone > 1
+        #             if (self.envir.map[getArrayLocation([self.x+dx, self.y+dy])].pheromone_concentration > 0):
+        #                 possible_target_points.append([self.x+dx, self.y+dy])
+        #                 phSum += self.envir.map[getArrayLocation([self.x+dx, self.y+dy])].pheromone_concentration**2
+        #                 norm += (self.envir.map[getArrayLocation([self.x+dx, self.y+dy])].pheromone_concentration*self.envir.hiveDist(self.x+dx, self.y+dy))**2
+        #                 n += 1
         
         if (phSum<self.follower_to_seeker or n==0):
+        # if (n==0):
             self.type = Ant.TYPE_SEEKER
         else:
             intervall.append((self.envir.map[getArrayLocation(possible_target_points[0])].pheromone_concentration*(100/norm)*self.envir.hiveDist(possible_target_points[0][0],possible_target_points[0][1]))**2)
@@ -248,6 +250,7 @@ class Ant:
                     return target
             if (target == [0,0]):
                 target = choice(possible_target_points)
+
         # Pick a random possible target instead
         self.move_hist.append([self.x, self.y])
         return target

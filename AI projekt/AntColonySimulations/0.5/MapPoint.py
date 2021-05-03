@@ -1,6 +1,4 @@
 import pygame
-# from Utils import pointsInCircle, fromArrayLocation, getArrayLocation, hsl2rgb, debugDraw, checkIfFood
-# from Utils import hsl2rgb
 
 def hsl2rgb(h, s, l):
     s /= 100
@@ -36,7 +34,8 @@ class MapPoint:
     TYPE_OBSTACLE = 3
 
     MAX_CONCENTRATION = 100.0
-    DECAY_CONSTANT = 0.006
+    # DECAY_CONSTANT = 0.006
+    DECAY_CONSTANT = 0.016
 
     SEEKER_SWAY = MAX_CONCENTRATION*0.75
 

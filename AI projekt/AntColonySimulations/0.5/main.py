@@ -20,8 +20,6 @@ class Environment:
         self._running = True
         self.screen = pygame.display.set_mode((width, height), HWSURFACE|DOUBLEBUF|RESIZABLE)
         self.fake_screen = self.screen.copy()
-        # self.screen = pygame.display.set_mode((width*4, height*4), HWSURFACE|DOUBLEBUF|RESIZABLE)
-
 
         self.map = []
         for i in range(self._width*self._height):
@@ -29,8 +27,6 @@ class Environment:
         ##
         self.nest = Nest(self)
         self.food = {}
-        # self.pheromones = []
-        # self.pheromones_to_clear = []
         self.ants = []
         ##
         self.Clock = pygame.time.Clock()
@@ -42,18 +38,6 @@ class Environment:
     def handle_event(self, event):
         if event.type == pygame.QUIT:
             self._running = False
-        # elif event.type == pygame.MOUSEBUTTONUP and pygame.key.get_mods()&pygame.KMOD_CTRL:
-        #     p = [0,0]
-        #     pos = pygame.mouse.get_pos()
-        #     p[0] = math.floor((pos[0]/self.screen.get_width())*self._width)
-        #     p[1] = math.floor((pos[1]/self.screen.get_height())*self._height)
-        #     points = pointsInCircle(p, 5)
-        #     if (pygame.key.get_mods()&pygame.KMOD_ALT):
-        #         for p in points:
-        #             Pheromone(self, 0.7, pos=p)
-        #     else:
-        #         for p in points:
-        #             Pheromone(self, -0.7, pos=p)
         elif event.type == pygame.MOUSEBUTTONUP and pygame.key.get_mods()&pygame.KMOD_ALT:
             p = [0,0]
             pos = pygame.mouse.get_pos()
@@ -61,7 +45,10 @@ class Environment:
             p[1] = math.floor((pos[1]/self.screen.get_height())*self._height)
             foodPoints = pointsInCircle(p, 10)
             for point in foodPoints:
-                overlord.food[getArrayLocation(point)] = Food(self, point)
+                try:
+                    overlord.food[getArrayLocation(point)] = Food(self, point)
+                except:
+                    pass
         elif event.type == VIDEORESIZE:
             newWindowSize = (event.size[0], math.floor(event.size[0]*getRatio()))
             self.screen = pygame.display.set_mode(newWindowSize, HWSURFACE|DOUBLEBUF|RESIZABLE)
@@ -93,8 +80,6 @@ class Environment:
     
     def handle_ants(self):
         for ant in self.ants:
-            # x = threading.Thread(target=ant.move())
-            # x.start()
             ant.move()
     
     def hiveDist(self, x, y):
@@ -105,7 +90,7 @@ class Environment:
         return 0.0
 
 
-overlord = Environment(getWidth(), getHeight(), 500)
+overlord = Environment(getWidth(), getHeight(), 100)
 overlord.ants.append(Ant(overlord, overlord.nest, Ant.TYPE_SEEKER, "My")) # Myran My
 
 # Corner food
@@ -124,8 +109,7 @@ while overlord._running:
 
     overlord.handle_ants()
     overlord.display()
-    
-    # print(overlord.fake_screen.get_rect().size)
+
     overlord.screen.blit(pygame.transform.scale(overlord.fake_screen, overlord.screen.get_rect().size), (0,0))
     
     pygame.display.flip()
