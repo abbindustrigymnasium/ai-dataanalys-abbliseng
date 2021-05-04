@@ -10,6 +10,7 @@ Simulera en myr koloni.
 
 När en myra hittat mat rör den sig så att dess distans hem alltid minskar men några slupmässiga svängar så den inte alltid går exakt raka vägen. Vid varje steg kollar alla *seeker* myror om det finns något spår i närheten, om så byter de till *follower* myror. Om en *follower* myra tappar spåret återgår den till en *seeker*.
 
+---
 ### Ants
 #### Seeker
 Myrorna letar åt en av 8 riktningar (illustrerat i bilden nedan). Beroende på vilken av de tre möjliga de väljer så kan de byta riktning genom att svänga. Om t.ex. en ruta som nedan märkts med -1 väljs innebär detta att myran kommer minska sin riktning med 1 och därmed röra sig motsols i diagrammet nedan. Om den har riktning 6 kommer den alltså nästa gång ha riktning 5.
@@ -28,6 +29,7 @@ Dessa är de myror som hittat mat och som går hemmåt och lämnar därmed ferom
 ##### De som inte gör det
 En myra blir en klass 2 returner om den antingen nått sin max distans eller nuddar en vägg. Dessa går på samma sätt som de första returners men dessa lämnar inga feromon spår bakom sig.
 
+---
 ### Map
 "Spelbrädet" är uppbyggt av *MapPoints*. Det finns en *MapPoint* per pixel på skärmen och dessa håller följande information:
 * Typ
@@ -40,7 +42,7 @@ En myra blir en klass 2 returner om den antingen nått sin max distans eller nud
 Det finns precis som med myrorna flera olika typer av *MapPoints*; *Nest*, *Food*, *Empty*, *Obstacle*.
 Dessa har lite olika funktioner med det är rätt självförklarande. *Nest* är själva myrstacken där myrorna börjar och t.ex. lämnar maten. *Food* är mat punkter, om en myra hittar en blir den en *returner* av typ 1 och *MapPoint*en klassas om till en av typ *empty*. *Obstacle*s är bara *MapPoints* myror inte kan befinan sig på/gå igenom.
 
-
+---
 ### Referenser
 * [Ants Simulation](https://itp.uni-frankfurt.de/~gros/StudentProjects/Applets_2014_AntsSimulation/ants.htm) av Peter Kuhn, Jannik Luboeinski, Laura Martin, Marius Schneider  
 * [Ant Colony Simulations](https://softologyblog.wordpress.com/2020/03/21/ant-colony-simulations/) av Softology  
