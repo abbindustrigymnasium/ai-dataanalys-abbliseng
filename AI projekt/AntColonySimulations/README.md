@@ -28,6 +28,19 @@ Dessa är de myror som hittat mat och som går hemmåt och lämnar därmed ferom
 ##### De som inte gör det
 En myra blir en klass 2 returner om den antingen nått sin max distans eller nuddar en vägg. Dessa går på samma sätt som de första returners men dessa lämnar inga feromon spår bakom sig.
 
+### Map
+"Spelbrädet" är uppbyggt av *MapPoints*. Det finns en *MapPoint* per pixel på skärmen och dessa håller följande information:
+* Typ
+* Decay Constant
+* Position
+* Display objekt
+* Feromon nivå
+*MapPoint* klassen innehåller också funktionerna relaterade till att rita ut pixeln och hantera feromonerna.
+#### Typer
+Det finns precis som med myrorna flera olika typer av *MapPoints*; *Nest*, *Food*, *Empty*, *Obstacle*.
+Dessa har lite olika funktioner med det är rätt självförklarande. *Nest* är själva myrstacken där myrorna börjar och t.ex. lämnar maten. *Food* är mat punkter, om en myra hittar en blir den en *returner* av typ 1 och *MapPoint*en klassas om till en av typ *empty*. *Obstacle*s är bara *MapPoints* myror inte kan befinan sig på/gå igenom.
+
+
 ### Referenser
 * [Ants Simulation](https://itp.uni-frankfurt.de/~gros/StudentProjects/Applets_2014_AntsSimulation/ants.htm) av Peter Kuhn, Jannik Luboeinski, Laura Martin, Marius Schneider  
 * [Ant Colony Simulations](https://softologyblog.wordpress.com/2020/03/21/ant-colony-simulations/) av Softology  
