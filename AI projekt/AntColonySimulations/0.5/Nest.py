@@ -1,5 +1,4 @@
 import math
-from Utils import *
 import pygame
 from MapPoint import MapPoint
 
@@ -8,11 +7,12 @@ class Nest:
         self.x = getRelX()
         self.y = getRelY()
         self.envir = envir
-        self.tiles = [] 
+        self.tiles = []
+    
         for tile in [[self.x, self.y],[self.x+1, self.y],[self.x, self.y+1],[self.x+1, self.y+1]]:
-        # for tile in pointsInCircle([self.x, self.y], 3):
             self.tiles.append(pygame.Rect(tile[0], tile[1], 1, 1))
-            self.envir.map[getArrayLocation([tile[0], tile[1]])].type = MapPoint.TYPE_NEST
+            self.envir.map[getArrayLocation([tile[0], tile[1]])].type = MapPoint.TYPE_NEST # Update MapPoint type
+    
     def display(self):
         for tile in self.tiles:
             pygame.draw.rect(self.envir.fake_screen, (255,0,0), tile)
