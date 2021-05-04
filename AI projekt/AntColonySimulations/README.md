@@ -11,6 +11,10 @@ Simulera en myr koloni.
 När en myra hittat mat rör den sig så att dess distans hem alltid minskar men några slupmässiga svängar så den inte alltid går exakt raka vägen. Vid varje steg kollar alla *seeker* myror om det finns något spår i närheten, om så byter de till *follower* myror. Om en *follower* myra tappar spåret återgår den till en *seeker*.
 
 ---
+### Main.py
+Denna fil är det faktiska spel loopen. Den ansvarar för att sedan kalla de nedstående klassernas funktioner men också hantera event och innehåller klassen *Environment* som i sin tur håller all information om spelvärlden.
+
+---
 ### Ants
 #### Seeker
 Myrorna letar åt en av 8 riktningar (illustrerat i bilden nedan). Beroende på vilken av de tre möjliga de väljer så kan de byta riktning genom att svänga. Om t.ex. en ruta som nedan märkts med -1 väljs innebär detta att myran kommer minska sin riktning med 1 och därmed röra sig motsols i diagrammet nedan. Om den har riktning 6 kommer den alltså nästa gång ha riktning 5.
@@ -41,6 +45,10 @@ En myra blir en klass 2 returner om den antingen nått sin max distans eller nud
 #### Typer
 Det finns precis som med myrorna flera olika typer av *MapPoints*; *Nest*, *Food*, *Empty*, *Obstacle*.
 Dessa har lite olika funktioner med det är rätt självförklarande. *Nest* är själva myrstacken där myrorna börjar och t.ex. lämnar maten. *Food* är mat punkter, om en myra hittar en blir den en *returner* av typ 1 och *MapPoint*en klassas om till en av typ *empty*. *Obstacle*s är bara *MapPoints* myror inte kan befinan sig på/gå igenom.
+
+---
+### Utils.py
+Denna fil innehåller bara användbara variabler och funktioner som de andra klasserna sedan använder.
 
 ---
 ### Referenser
