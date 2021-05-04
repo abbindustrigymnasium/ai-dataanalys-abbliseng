@@ -1,4 +1,5 @@
 import math
+from Utils import getRelX, getRelY, getArrayLocation;
 import pygame
 from MapPoint import MapPoint
 
