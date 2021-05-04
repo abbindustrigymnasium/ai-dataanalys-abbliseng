@@ -6,6 +6,7 @@ import  math
 
 class Ant:
 
+    # Four ant types/roles
     TYPE_SEEKER = 0
     TYPE_FOLLOWER = 1
     TYPE_RETURNER = 2
@@ -13,8 +14,8 @@ class Ant:
 
     MAX_TRIP = 450 # self.envir._width*2+self.envir._height
 
-    PH_FOOD_MULTIPLIER = 5
-    PH_FOOD_MULTIPLIER_LENGTH = 10
+    PH_FOOD_MULTIPLIER = 5 # PH drop boost after finding food
+    PH_FOOD_MULTIPLIER_LENGTH = 10 # How long boost lasts
 
     MAX_PH_DROP = 20.0
     STD_PH_DROP = 5.0
@@ -28,50 +29,44 @@ class Ant:
         self.y = nest.y
         self.type = t
         self.move_hist = []
-        self.dir = randint(0,7) # 0-7
+        self.dir = randint(0,7) # 0-7 # Get start direction
         self.envir = envir
         self.object = pygame.Rect(self.x, self.y, 1, 1)
-        self.viewdist = 5
-        self.is_carrying = False
-        self.freedom = random()
-        self.scout = True
+        self.is_carrying = False # limit to one food pickup
+        self.freedom = random() # likeliness to deviate
         self.ph_increase = Ant.STD_PH_DROP
         self.follower_to_seeker = self.ph_increase/10
         self.seeker_prob = round(MapPoint.MAX_CONCENTRATION+MapPoint.MAX_CONCENTRATION*0.05)
 
     def display(self):
         if (self.id != None):
-            # pygame.draw.rect(self.envir.fake_screen, (201, 42, 42), self.object)
             pygame.draw.rect(self.envir.fake_screen, (76, 230, 230), self.object)
         elif (self.type == Ant.TYPE_RETURNER):
             pygame.draw.rect(self.envir.fake_screen, (47, 168, 47), self.object)
         elif (self.type == Ant.TYPE_FOLLOWER):
             pygame.draw.rect(self.envir.fake_screen, (235, 147, 52), self.object)
         else:
-            # pygame.draw.rect(self.envir.fake_screen, (0, 0, 0), self.object)
             pygame.draw.rect(self.envir.fake_screen, (255, 255, 255), self.object)
 
     def pheromoneDrop(self, mapPoint, dirX, dirY):
-        if (Ant.MAX_TRIP-len(self.move_hist) < Ant.PH_FOOD_MULTIPLIER_LENGTH):
+        if (Ant.MAX_TRIP-len(self.move_hist) < Ant.PH_FOOD_MULTIPLIER_LENGTH): # Check if boost applies
             ph_inc = self.ph_increase * Ant.PH_FOOD_MULTIPLIER
             ph_inc_side = self.ph_increase * Ant.PH_FOOD_MULTIPLIER / Ant.SIDE_DROP
         else:
             ph_inc = self.ph_increase
             ph_inc_side = self.ph_increase/Ant.SIDE_DROP
-        mapPoint.pheromoneIncrease(ph_inc)
-        # self.envir.pheromones.append((self.x, self.y))
+        mapPoint.pheromoneIncrease(ph_inc) # Increase with calculated value
         if (abs(dirX) <= 1 and abs(dirY) <= 1):
             for i in range(-1,2):
                 for j in range(-1,2):
                     if (i==0 and j==0):
                         continue
-                    if (getArrayLocation([self.x+i,self.y+j]) < 0 or getArrayLocation([self.x+i,self.y+j]) > self.envir._width*self.envir._height-1):
+                    if (getArrayLocation([self.x+i,self.y+j]) < 0 or getArrayLocation([self.x+i,self.y+j]) > self.envir._width*self.envir._height-1): # Make sure it is within bounds
                         continue
-                    self.envir.map[getArrayLocation([self.x+i,self.y+j])].pheromoneIncrease(ph_inc_side)
+                    self.envir.map[getArrayLocation([self.x+i,self.y+j])].pheromoneIncrease(ph_inc_side) # Drop pheromones to surrounding spots
                     # self.envir.pheromones.append((self.x+i, self.y+j))
 
-    def checkForSurrondingFood(self, tier=0):
-        # Might be better to append points to list and then randomize so if multiple choices it is random
+    def checkForSurrondingFood(self, tier=0): # Look through surrounding and check if any tile has food, if so make that the target
         food_options = []
         for dx in range(-1-tier,2+tier):
             for dy in range(-1-tier,2+tier):
@@ -83,10 +78,10 @@ class Ant:
                 if (checkIfFood(self, p)):
                     food_options.append(p)
         if (food_options != []):
-            return choice(food_options)
+            return choice(food_options) # If multiple options pick random within these
         return False
 
-    def findSeekerTarger(self):
+    def findSeekerTarget(self):
         # Check for surrounding food
         target = self.checkForSurrondingFood()
         if (target == "EDGE"):
@@ -101,7 +96,6 @@ class Ant:
                 p = [self.x+dx, self.y+dy]
                 if ((dx == 0 and dy == 0) or (getArrayLocation(p) < 0 or getArrayLocation(p) > getWidth()*getHeight()-1)):
                     continue
-                # print(self.envir.map[getArrayLocation(p)].pheromone_concentration)
                 if (self.envir.map[getArrayLocation(p)].pheromone_concentration > MapPoint.SEEKER_SWAY*self.freedom):
                     self.type = Ant.TYPE_FOLLOWER
                     return [self.x+dx, self.y+dy]
@@ -176,7 +170,9 @@ class Ant:
             self.dir += 1
         # Append current pos to move history
         self.move_hist.append([self.x, self.y])
+        # return the target
         return target
+
     def findReturnerTarget(self):
         # Go to lastest position according to move hist and remove that element.
         # if (len(self.move_hist) > 0):
@@ -185,6 +181,7 @@ class Ant:
         # else:
         #     target = [self.x,self.y]
         # return target
+        # Walk pretty much directly home with some random turns (always decrease distance to nest)
         possiblie_return_points = []
         for dx in range(-1,2):
             for dy in range(-1,2):
@@ -194,10 +191,8 @@ class Ant:
                     possiblie_return_points.append([self.x+dx, self.y+dy])
         return choice(possiblie_return_points)
                 
-
-
-
     def findFollowerTarget(self):
+        # Reset values
         n = 0
         phSum = 0
         norm = 0
@@ -212,34 +207,22 @@ class Ant:
             self.move_hist.append([self.x, self.y])
             return possible_target
         
-        # Get possible targets with a pheromone concentration over 1
+        # Get possible targets with a pheromone concentration over 1 and further from nest (always increase distance)
         for dx in range(-1,2):
             for dy in range(-1,2):
-                if ((dx == 0 and dy == 0) or getArrayLocation([self.x+dx, self.y+dy]) < 0 or getArrayLocation([self.x+dx, self.y+dy]) > getWidth()*getHeight()-1):
+                if ((dx == 0 and dy == 0) or getArrayLocation([self.x+dx, self.y+dy]) < 0 or getArrayLocation([self.x+dx, self.y+dy]) > getWidth()*getHeight()-1): # Make sure its within bounds
                     continue
-                # Check if further from the nest and if has pheromone > 1
                 if (self.envir.hiveDist(self.x, self.y)<=self.envir.hiveDist(self.x+dx, self.y+dy) and self.envir.map[getArrayLocation([self.x+dx, self.y+dy])].pheromone_concentration > 0):
                     possible_target_points.append([self.x+dx, self.y+dy])
+                    # Calculate possible target point weights
                     phSum += self.envir.map[getArrayLocation([self.x+dx, self.y+dy])].pheromone_concentration**2
                     norm += (self.envir.map[getArrayLocation([self.x+dx, self.y+dy])].pheromone_concentration*self.envir.hiveDist(self.x+dx, self.y+dy))**2
                     n += 1
-        # If no possible targets switch to seeker type
-        # if (n == 0):
-        #     for dx in range(-1,2):
-        #         for dy in range(-1,2):
-        #             if ((dx == 0 and dy == 0) or getArrayLocation([self.x+dx, self.y+dy]) < 0 or getArrayLocation([self.x+dx, self.y+dy]) > getWidth()*getHeight()-1):
-        #                 continue
-        #             # Check if closer from the nest and if has pheromone > 1
-        #             if (self.envir.map[getArrayLocation([self.x+dx, self.y+dy])].pheromone_concentration > 0):
-        #                 possible_target_points.append([self.x+dx, self.y+dy])
-        #                 phSum += self.envir.map[getArrayLocation([self.x+dx, self.y+dy])].pheromone_concentration**2
-        #                 norm += (self.envir.map[getArrayLocation([self.x+dx, self.y+dy])].pheromone_concentration*self.envir.hiveDist(self.x+dx, self.y+dy))**2
-        #                 n += 1
-        
+        # If no possible targets or no good enough targets switch to seeker type
         if (phSum<self.follower_to_seeker or n==0):
-        # if (n==0):
             self.type = Ant.TYPE_SEEKER
         else:
+            # Calculate the actual map tile weights depending on dist and ph concentration
             intervall.append((self.envir.map[getArrayLocation(possible_target_points[0])].pheromone_concentration*(100/norm)*self.envir.hiveDist(possible_target_points[0][0],possible_target_points[0][1]))**2)
             for i in range(1, n):
                 intervall.append(intervall[i-1]+(self.envir.map[getArrayLocation(possible_target_points[i])].pheromone_concentration*(100/norm)*self.envir.hiveDist(possible_target_points[i][0],possible_target_points[i][1]))**2)
@@ -249,9 +232,9 @@ class Ant:
                     self.move_hist.append([self.x, self.y])
                     return target
             if (target == [0,0]):
+                # If none is found (random fails) just pick a random one
                 target = choice(possible_target_points)
 
-        # Pick a random possible target instead
         self.move_hist.append([self.x, self.y])
         return target
 
@@ -259,18 +242,18 @@ class Ant:
     def move(self):
         # Depending on type find accurate target
         if (self.type == Ant.TYPE_SEEKER):
-            target = self.findSeekerTarger()
-            if (len(self.move_hist) >= Ant.MAX_TRIP):
+            target = self.findSeekerTarget()
+            if (len(self.move_hist) >= Ant.MAX_TRIP): # Return if max trip is reached
                 self.type = Ant.TYPE_RETURNER2
         elif (self.type == Ant.TYPE_RETURNER or self.type == Ant.TYPE_RETURNER2):
             target = self.findReturnerTarget()
-            if (self.type == Ant.TYPE_RETURNER):
+            if (self.type == Ant.TYPE_RETURNER): # Leave pheromones
                 dirX = target[0]-self.x
                 dirY = target[1]-self.y
                 self.pheromoneDrop(self.envir.map[getArrayLocation([self.x, self.y])], dirX, dirY)
         elif (self.type == Ant.TYPE_FOLLOWER):
             target = self.findFollowerTarget()
-            if (len(self.move_hist) >= Ant.MAX_TRIP):
+            if (len(self.move_hist) >= Ant.MAX_TRIP): # Dont walk to far now :)
                 self.type = Ant.TYPE_RETURNER2
         # Calculate the new pos
         if (self.x < target[0]):
@@ -283,26 +266,15 @@ class Ant:
             self.y -= 1
         # Do other things that are specific to certain tiles
         if self.envir.map[getArrayLocation([self.x, self.y])].type == MapPoint.TYPE_NEST:
-            self.move_hist = [[self.x, self.y]]
-            if (self.type == Ant.TYPE_RETURNER and self.is_carrying):
+            self.move_hist = [[self.x, self.y]] # Reset the move hist
+            if (self.type == Ant.TYPE_RETURNER and self.is_carrying): # Drop food
                 self.is_carrying = False
-            # Random chance to become a follower
-            # rnd = randint(0, self.seeker_prob)
-            # for dx in range(-1,2):
-            #     for dy in range(-1,2):
-            #         if ((dx == 0 and dy == 0) or getArrayLocation([self.x+dx, self.y+dy]) < 0 or getArrayLocation([self.x+dx, self.y+dy]) > getWidth()*getHeight()-1):
-            #             continue
-            #         # print(round(self.envir.map[getArrayLocation([self.x+dx, self.y+dy])].pheromone_concentration),":",rnd,":",round(self.envir.map[getArrayLocation([self.x+dx, self.y+dy])].pheromone_concentration) > rnd)
-            #         if (round(self.envir.map[getArrayLocation([self.x+dx, self.y+dy])].pheromone_concentration) > rnd*(1-self.freedom)):
-            #             self.type = Ant.TYPE_FOLLOWER
-            #             break
-            # Otherwise become a seeker
             if (self.type != Ant.TYPE_FOLLOWER):
                 self.type = Ant.TYPE_SEEKER
-        # If food is found return home with it and leave trail
+        # If food is found and you arent already returning return home with it and leave trail
         elif self.envir.map[getArrayLocation([self.x, self.y])].type == MapPoint.TYPE_FOOD and self.type != Ant.TYPE_RETURNER:
             self.is_carrying = True
-            self.envir.map[getArrayLocation([self.x, self.y])].type = MapPoint.TYPE_EMPTY
+            self.envir.map[getArrayLocation([self.x, self.y])].type = MapPoint.TYPE_EMPTY # reset the maptype
             try:
                 del self.envir.food[getArrayLocation([self.x, self.y])]
             except KeyError:
@@ -310,9 +282,9 @@ class Ant:
             self.type = Ant.TYPE_RETURNER
 
         if (self.type == Ant.TYPE_SEEKER or self.type == Ant.TYPE_FOLLOWER):
-            if (self.x == 0 or self.x == self.envir._width or self.y == 0 or self.y == self.envir._height):
+            if (self.x == 0 or self.x == self.envir._width or self.y == 0 or self.y == self.envir._height): # If and edge is hit just return home
                 self.type = Ant.TYPE_RETURNER2
         
-        # Actually move (display)
+        # Actually move the object
         self.object.x = self.x
         self.object.y = self.y
