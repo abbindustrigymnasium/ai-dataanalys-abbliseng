@@ -1,5 +1,6 @@
 import pygame
 
+# Cant import from Utils becouse of import loop so temp here
 def hsl2rgb(h, s, l):
     s /= 100
     l /= 100
@@ -27,14 +28,14 @@ def hsl2rgb(h, s, l):
     return((r,g,b))
 
 class MapPoint:
-
+    # The four diffirent types of map points
     TYPE_EMPTY = 0
     TYPE_FOOD = 1
     TYPE_NEST = 2
     TYPE_OBSTACLE = 3
 
-    MAX_CONCENTRATION = 100.0
-    # DECAY_CONSTANT = 0.006
+    MAX_CONCENTRATION = 100.0 # Max amount of pheromones in any given tile
+    # DECAY_CONSTANT = 0.006 # Determines how fast pheromones decay
     DECAY_CONSTANT = 0.016
 
     SEEKER_SWAY = MAX_CONCENTRATION*0.75
@@ -48,21 +49,20 @@ class MapPoint:
         self.DECAY_CONSTANT = MapPoint.DECAY_CONSTANT
 
     def pheromoneDecay(self, envir=None, pos=None):
-        self.pheromone_concentration = (1-self.DECAY_CONSTANT)*self.pheromone_concentration
-        if (self.pheromone_concentration <= 0.0000001):
+        self.pheromone_concentration = (1-self.DECAY_CONSTANT)*self.pheromone_concentration # Calc new pheromone level
+        if (self.pheromone_concentration <= 0.0000001): # if bellow just make it zero and reset decay constant
             self.pheromone_concentration = 0
             self.DECAY_CONSTANT = MapPoint.DECAY_CONSTANT
             
     def pheromoneIncrease(self, val):
         if (self.type != MapPoint.TYPE_OBSTACLE):
             self.DECAY_CONSTANT = MapPoint.DECAY_CONSTANT
-            self.pheromone_concentration += val
-            if (self.pheromone_concentration > MapPoint.MAX_CONCENTRATION):
+            self.pheromone_concentration += val # Increments pheromone level by specified value
+            if (self.pheromone_concentration > MapPoint.MAX_CONCENTRATION): # Clamp to max value
                 self.pheromone_concentration = MapPoint.MAX_CONCENTRATION
     
     def display(self):
         self.pheromoneDecay()
-
         if (self.type == MapPoint.TYPE_NEST):
             pygame.draw.rect(self.envir.fake_screen, (255,0,0), self.object)
         elif (self.type == MapPoint.TYPE_FOOD):
