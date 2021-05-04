@@ -15,6 +15,11 @@ När en myra hittat mat rör den sig så att dess distans hem alltid minskar men
 Denna fil är det faktiska spel loopen. Den ansvarar för att sedan kalla de nedstående klassernas funktioner men också hantera event och innehåller klassen *Environment* som i sin tur håller all information om spelvärlden.
 
 ---
+#### Kontroller/Key-binds
+q - Stäng programmet  
+alt + l-click - Placera mat vid muspekaren  
+
+---
 ### Ants
 #### Seeker
 Myrorna letar åt en av 8 riktningar (illustrerat i bilden nedan). Beroende på vilken av de tre möjliga de väljer så kan de byta riktning genom att svänga. Om t.ex. en ruta som nedan märkts med -1 väljs innebär detta att myran kommer minska sin riktning med 1 och därmed röra sig motsols i diagrammet nedan. Om den har riktning 6 kommer den alltså nästa gång ha riktning 5.
