@@ -16,11 +16,10 @@ class Environment:
     def __init__(self, width, height, number_of_ants):
         self._width = width
         self._height = height
-
         self._running = True
         self.screen = pygame.display.set_mode((width, height), HWSURFACE|DOUBLEBUF|RESIZABLE)
         self.fake_screen = self.screen.copy()
-
+        # Initialize game map
         self.map = []
         for i in range(self._width*self._height):
             self.map.append(MapPoint(fromArrayLocation(i),MapPoint.TYPE_EMPTY, self))
@@ -29,45 +28,31 @@ class Environment:
         self.food = {}
         self.ants = []
         ##
-        self.Clock = pygame.time.Clock()
-
-        for i in range(number_of_ants):
+        for i in range(number_of_ants): # Spawns some ants
             self.ants.append(Ant(self, self.nest, Ant.TYPE_SEEKER))
-        self.ants.append(Ant(self, self.nest, Ant.TYPE_FOLLOWER))
 
     def handle_event(self, event):
         if event.type == pygame.QUIT:
             self._running = False
-        elif event.type == pygame.MOUSEBUTTONUP and pygame.key.get_mods()&pygame.KMOD_ALT:
+        elif event.type == pygame.MOUSEBUTTONUP and pygame.key.get_mods()&pygame.KMOD_ALT: # alt + click spawns food within a radius
             p = [0,0]
             pos = pygame.mouse.get_pos()
             p[0] = math.floor((pos[0]/self.screen.get_width())*self._width)
             p[1] = math.floor((pos[1]/self.screen.get_height())*self._height)
-            foodPoints = pointsInCircle(p, 10)
+            foodPoints = pointsInCircle(p, 6)
             for point in foodPoints:
-                try:
+                try: # Just make sure its within the array bounds
                     overlord.food[getArrayLocation(point)] = Food(self, point)
                 except:
                     pass
-        elif event.type == VIDEORESIZE:
+        elif event.type == VIDEORESIZE: # Resize with same ratio
             newWindowSize = (event.size[0], math.floor(event.size[0]*getRatio()))
             self.screen = pygame.display.set_mode(newWindowSize, HWSURFACE|DOUBLEBUF|RESIZABLE)
         elif event.type  == pygame.KEYDOWN:
-            if event.key ==  ord('q'):
+            if event.key ==  ord('q'): # Quit game if q is pressed
                 self._running = False
-            elif event.key == ord('f'):
-                self.screen = pygame.display.set_mode((1000,math.floor(1000*getRatio())))
-            elif event.key == ord('w'):
-                MapPoint.DECAY_CONSTANT += 0.002
-                print(MapPoint.DECAY_CONSTANT)
-            elif event.key == ord('s'):
-                MapPoint.DECAY_CONSTANT -= 0.002
-                print(MapPoint.DECAY_CONSTANT)
     
     def resetWindow(self):
-        # self.screen.fill((78, 42, 42))
-        # self.screen.fill((255, 255, 255))
-        # self.fake_screen.fill((255, 255, 255))
         self.screen.fill((0, 0, 0))
         self.fake_screen.fill((0, 0, 0))
         pass
@@ -86,14 +71,15 @@ class Environment:
         if (x == self.nest.x and y == self.nest.y):
             pass
         else:
+            # Calculate distance from the nest
             return math.sqrt(abs(pow(x-self.nest.x, 2))+abs(pow(y-self.nest.y, 2)))
         return 0.0
 
 
-overlord = Environment(getWidth(), getHeight(), 100)
+overlord = Environment(getWidth(), getHeight(), 100) # width, height, number of ants
 overlord.ants.append(Ant(overlord, overlord.nest, Ant.TYPE_SEEKER, "My")) # Myran My
 
-# Corner food
+# START FOOD (IN CORNERS)
 # for x in range(10,25):
 #     for y in range(10,20):
 #         overlord.food[getArrayLocation((x,y))] = Food(overlord, (x,y))
@@ -110,8 +96,10 @@ while overlord._running:
     overlord.handle_ants()
     overlord.display()
 
+    # Zoom
     overlord.screen.blit(pygame.transform.scale(overlord.fake_screen, overlord.screen.get_rect().size), (0,0))
     
+    #Update screen
     pygame.display.flip()
 
 pygame.quit()
