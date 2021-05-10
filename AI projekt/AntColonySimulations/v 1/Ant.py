@@ -174,25 +174,23 @@ class Ant:
         return target
 
     def findReturnerTarget(self):
-        # Go to lastest position according to move hist and remove that element.
-        # if (len(self.move_hist) > 0):
-        #     target = self.move_hist[-1]
-        #     self.move_hist.pop(-1)
-        # else:
-        #     target = [self.x,self.y]
-        # return target
-        # Walk pretty much directly home with some random turns (always decrease distance to nest)
+        '''
+        The returner ants move directly towards the nest with some random turns thrown in.
+        They are actually just limited to decreasing their distance to the nest.
+        In nature ants actually use light and landmarks to find their way back and this was the closes I could
+        replicate that behavior within the timeframe.
+        '''
         possiblie_return_points = []
         for dx in range(-1,2):
             for dy in range(-1,2):
                 if ((dx == 0 and dy == 0) or getArrayLocation([self.x+dx, self.y+dy]) < 0 or getArrayLocation([self.x+dx, self.y+dy]) > getWidth()*getHeight()-1):
                     continue
-                if (self.envir.hiveDist(self.x, self.y)>=self.envir.hiveDist(self.x+dx, self.y+dy)):
+                if (self.envir.hiveDist(self.x, self.y)>=self.envir.hiveDist(self.x+dx, self.y+dy)): # Increase the distance to hive
                     possiblie_return_points.append([self.x+dx, self.y+dy])
         return choice(possiblie_return_points)
                 
     def findFollowerTarget(self):
-        # Reset values
+        # Initialize variables
         n = 0
         phSum = 0
         norm = 0
@@ -205,7 +203,7 @@ class Ant:
         possible_target = self.checkForSurrondingFood(1)
         if (possible_target and possible_target != "EDGE"):
             self.move_hist.append([self.x, self.y])
-            return possible_target
+            return possible_target # If food is found, go there
         
         # Get possible targets with a pheromone concentration over 1 and further from nest (always increase distance)
         for dx in range(-1,2):

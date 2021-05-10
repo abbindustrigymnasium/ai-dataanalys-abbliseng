@@ -79,14 +79,16 @@ class Environment:
 overlord = Environment(getWidth(), getHeight(), 100) # width, height, number of ants
 overlord.ants.append(Ant(overlord, overlord.nest, Ant.TYPE_SEEKER, "My")) # Myran My
 
-# START FOOD (IN CORNERS)
-# for x in range(10,25):
-#     for y in range(10,20):
-#         overlord.food[getArrayLocation((x,y))] = Food(overlord, (x,y))
-#         # overlord.food[getArrayLocation((_width-x,y))] = Food(overlord, (_width-x,y))
-#         # overlord.food[getArrayLocation((x,_height-y))] = Food(overlord, (x,_height-y))
-#         overlord.food[getArrayLocation((getWidth()-x,getHeight()-y))] = Food(overlord, (getWidth()-x,getHeight()-y))
-
+# Uncomment the code bellow to enable starter patches of food in each corner of the screen
+'''
+START FOOD (IN CORNERS)
+for x in range(10,25):
+    for y in range(10,20):
+        overlord.food[getArrayLocation((x,y))] = Food(overlord, (x,y))
+        # overlord.food[getArrayLocation((_width-x,y))] = Food(overlord, (_width-x,y))
+        # overlord.food[getArrayLocation((x,_height-y))] = Food(overlord, (x,_height-y))
+        overlord.food[getArrayLocation((getWidth()-x,getHeight()-y))] = Food(overlord, (getWidth()-x,getHeight()-y))
+'''
 while overlord._running:
     overlord.resetWindow()
 
@@ -94,7 +96,7 @@ while overlord._running:
         overlord.handle_event(event)
 
     overlord.handle_ants()
-    overlord.display()
+    overlord.display() # This function also calls the functions that handle pheromones and such.
 
     # Zoom
     overlord.screen.blit(pygame.transform.scale(overlord.fake_screen, overlord.screen.get_rect().size), (0,0))
